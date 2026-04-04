@@ -77,22 +77,8 @@ function findSlideIndexByFileName(fileName) {
   });
 }
 
-const startCandidates = ["2024-11-17_51.jpg", "4.jpg"];
-
-const availableStartCandidates = startCandidates.filter((fileName) => {
-  return findSlideIndexByFileName(fileName) !== -1;
-});
-
-let fixedStartIndex = -1;
-
-if (availableStartCandidates.length > 0) {
-  const selectedFile =
-    availableStartCandidates[
-      Math.floor(Math.random() * availableStartCandidates.length)
-    ];
-
-  fixedStartIndex = findSlideIndexByFileName(selectedFile);
-}
+/* 最初の1枚目を固定 */
+const fixedStartIndex = findSlideIndexByFileName("2024-11-17_51.jpg");
 
 const slideOrder = createShuffledOrder(slides.length);
 
@@ -248,8 +234,28 @@ function updateSlides() {
 /* 最初の1枚目をローディング中に確定しておく */
 function prepareFirstSlide() {
   if (!slides.length) return;
+
   currentOrderIndex = 0;
+
+  slides.forEach((slide) => {
+    slide.classList.remove("is-active");
+    slide.style.transition = "none";
+  });
+
+  const activeIndex = slideOrder[currentOrderIndex];
+  const activeSlide = slides[activeIndex];
+
+  if (activeSlide) {
+    activeSlide.classList.add("is-active");
+  }
+
   updateSlides();
+
+  requestAnimationFrame(() => {
+    slides.forEach((slide) => {
+      slide.style.transition = "";
+    });
+  });
 }
 
 /* 通常アニメーションをここで有効化 */
@@ -492,5 +498,3 @@ document.querySelectorAll(".menu-links a").forEach((link) => {
     link.classList.add("active");
   }
 });
-
-　
