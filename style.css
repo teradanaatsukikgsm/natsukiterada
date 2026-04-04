@@ -1192,3 +1192,7 @@ body.is-loaded {
 .hero-slider.is-visible {
   opacity: 1;
 }
+
+.hero-slider {
+  opacity: 0;
+}
