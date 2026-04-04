@@ -1113,3 +1113,15 @@ body.is-loaded {
     padding-bottom: 40px;
   }
 }
+
+/* =========================
+   FIRST SLIDE FIX
+========================= */
+
+.hero-slider.is-initialized .hero-slide {
+  transition: opacity 1.8s ease;
+}
+
+.hero-slider:not(.is-initialized) .hero-slide {
+  transition: none !important;
+}
