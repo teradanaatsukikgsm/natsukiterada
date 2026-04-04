@@ -77,22 +77,7 @@ function findSlideIndexByFileName(fileName) {
   });
 }
 
-const startCandidates = ["2024-11-17_51.jpg", "4.jpg"];
-
-const availableStartCandidates = startCandidates.filter((fileName) => {
-  return findSlideIndexByFileName(fileName) !== -1;
-});
-
-let fixedStartIndex = -1;
-
-if (availableStartCandidates.length > 0) {
-  const selectedFile =
-    availableStartCandidates[
-      Math.floor(Math.random() * availableStartCandidates.length)
-    ];
-
-  fixedStartIndex = findSlideIndexByFileName(selectedFile);
-}
+const fixedStartIndex = findSlideIndexByFileName("2024-11-17_51.jpg");
 
 const slideOrder = createShuffledOrder(slides.length);
 
