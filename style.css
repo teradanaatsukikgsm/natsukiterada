@@ -1125,3 +1125,14 @@ body.is-loaded {
 .hero-slider:not(.is-initialized) .hero-slide {
   transition: none !important;
 }
+
+.dot-ring-loader {
+  width: 90px;
+  height: 90px;
+}
+
+.ring-dot {
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+}
