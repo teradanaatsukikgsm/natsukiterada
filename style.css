@@ -1103,3 +1103,13 @@ body.is-loaded {
     margin-top: 36px !important;
   }
 }
+
+@media (max-width: 900px) {
+  .site-main.bio-main {
+    padding-bottom: 90px !important;
+  }
+
+  .bio-inner {
+    padding-bottom: 40px;
+  }
+}
