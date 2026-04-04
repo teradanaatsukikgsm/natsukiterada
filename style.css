@@ -1038,3 +1038,28 @@ body.is-loaded {
   justify-self: end;
   transform: translateY(-120px);
 }
+
+@media (max-width: 900px) {
+  .hero-arrow {
+    display: block;   /* ←これに変更 */
+    opacity: 0;       /* 見えない */
+    pointer-events: auto; /* 押せる */
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-arrow {
+    width: 50%;
+    height: 100%;
+    top: 0;
+    transform: none;
+  }
+
+  .hero-arrow-left {
+    left: 0;
+  }
+
+  .hero-arrow-right {
+    right: 0;
+  }
+}
