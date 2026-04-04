@@ -1084,3 +1084,9 @@ body.is-loaded {
     bottom: 12px;
   }
 }
+
+@media (max-width: 900px) {
+  .bio-inner {
+    padding-bottom: 80px;
+  }
+}
