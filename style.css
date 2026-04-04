@@ -1097,3 +1097,9 @@ body.is-loaded {
     padding-bottom: 80px;
   }
 }
+
+@media (max-width: 900px) {
+  .bio-clients {
+    margin-top: 36px !important;
+  }
+}
