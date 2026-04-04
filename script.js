@@ -5,9 +5,16 @@ const loadingScreen = document.querySelector(".loading-screen");
 const ringLoader = document.querySelector(".dot-ring-loader");
 const ringDots = document.querySelectorAll(".dot-ring-loader .ring-dot");
 
+/* =========================
+   STATE
+========================= */
+
 let loaderRAF = null;
 let loaderStart = null;
 let loaderFinished = false;
+let slideInterval = null;
+let hoverHandler = null;
+let sliderReady = false;
 
 /* =========================
    LOADER UTILS
@@ -15,11 +22,6 @@ let loaderFinished = false;
 
 function clamp(v, min, max) {
   return Math.min(max, Math.max(min, v));
-}
-
-function smooth(t) {
-  const x = clamp(t, 0, 1);
-  return x * x * (3 - 2 * x);
 }
 
 function smoother(t) {
@@ -53,10 +55,6 @@ const slides = document.querySelectorAll(".hero-slide");
 const hero = document.querySelector(".hero-slider");
 const prevButton = document.querySelector(".hero-arrow-left");
 const nextButton = document.querySelector(".hero-arrow-right");
-
-let slideInterval = null;
-let hoverHandler = null;
-let sliderInitialized = false;
 
 function createShuffledOrder(length) {
   const order = Array.from({ length }, (_, i) => i);
@@ -108,6 +106,8 @@ if (fixedStartIndex !== -1) {
 let currentOrderIndex = 0;
 
 function showArrows() {
+  if (window.innerWidth <= 900) return;
+
   [prevButton, nextButton].forEach((btn) => {
     if (btn) {
       btn.style.opacity = "1";
@@ -245,6 +245,20 @@ function updateSlides() {
   });
 }
 
+/* 最初の1枚目をローディング中に確定しておく */
+function prepareFirstSlide() {
+  if (!slides.length) return;
+  currentOrderIndex = 0;
+  updateSlides();
+}
+
+/* 通常アニメーションをここで有効化 */
+function enableSliderTransitions() {
+  if (hero) {
+    hero.classList.add("is-initialized");
+  }
+}
+
 function goToNextSlide() {
   currentOrderIndex = (currentOrderIndex + 1) % slides.length;
   updateSlides();
@@ -276,16 +290,7 @@ function startSlideShow() {
 }
 
 function resetSlideShow() {
-  if (!sliderInitialized) return;
-  startSlideShow();
-}
-
-function initSlider() {
-  if (sliderInitialized || !slides.length) return;
-
-  sliderInitialized = true;
-  currentOrderIndex = 0;
-  updateSlides();
+  if (!sliderReady) return;
   startSlideShow();
 }
 
@@ -305,7 +310,12 @@ if (nextButton) {
   });
 }
 
-window.addEventListener("resize", updateArrowPositions);
+window.addEventListener("resize", () => {
+  updateArrowPositions();
+  if (window.innerWidth <= 900) {
+    hideArrows();
+  }
+});
 
 slides.forEach((slide) => {
   const img = slide.querySelector(".hero-main-image");
@@ -330,8 +340,7 @@ function animateRingLoader(timestamp) {
   const outro = 0.8;
   const total = intro + hold + outro;
 
-  const baseSpeed =
-    0.56;
+  const baseSpeed = 0.56;
   const baseAngle =
     elapsed * Math.PI * 2 * baseSpeed +
     Math.sin(elapsed * 1.05) * 0.08 +
@@ -386,7 +395,9 @@ function animateRingLoader(timestamp) {
         loadingScreen.classList.add("is-hidden");
       }
 
-      initSlider();
+      enableSliderTransitions();
+      sliderReady = true;
+      startSlideShow();
     }, 180);
 
     cancelAnimationFrame(loaderRAF);
@@ -398,7 +409,9 @@ function animateRingLoader(timestamp) {
 
 function startRingLoader() {
   if (!ringLoader) {
-    initSlider();
+    enableSliderTransitions();
+    sliderReady = true;
+    startSlideShow();
     return;
   }
 
@@ -408,11 +421,6 @@ function startRingLoader() {
   loaderRAF = requestAnimationFrame(animateRingLoader);
 }
 
-function stopRingLoader() {
-  loaderFinished = true;
-  cancelAnimationFrame(loaderRAF);
-}
-
 /* =========================
    WINDOW LOAD
 ========================= */
@@ -420,10 +428,14 @@ function stopRingLoader() {
 window.addEventListener("load", () => {
   document.body.classList.add("is-loaded");
 
+  prepareFirstSlide();
+
   if (loadingScreen) {
     startRingLoader();
   } else {
-    initSlider();
+    enableSliderTransitions();
+    sliderReady = true;
+    startSlideShow();
   }
 
   updateArrowPositions();
