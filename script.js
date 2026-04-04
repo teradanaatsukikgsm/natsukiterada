@@ -331,7 +331,7 @@ function animateRingLoader(timestamp) {
     Math.sin(elapsed * 1.05) * 0.08 +
     Math.sin(elapsed * 2.0 + 1.1) * 0.03;
 
-  const radius = 22;
+  const radius = 16;
   const arcSpan = Math.PI * 1.28;
   const count = ringDots.length;
 
