@@ -1154,3 +1154,25 @@ body.is-loaded {
   opacity: 1;
   visibility: visible;
 }
+
+html,
+body {
+  background: #fff !important;
+}
+
+.loading-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background: #fff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+}
+
+body {
+  transition: none !important;
+}
