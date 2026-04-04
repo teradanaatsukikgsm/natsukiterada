@@ -1064,10 +1064,6 @@ body.is-loaded {
   }
 }
 
-.hero-arrow:active {
-  background: rgba(0,0,0,0.05);
-}
-
 @media (max-width: 900px) {
   .site-main.bio-main {
     padding-bottom: 120px;
