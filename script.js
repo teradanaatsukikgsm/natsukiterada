@@ -410,7 +410,7 @@ function startRingLoader() {
    WINDOW LOAD
 ========================= */
 
-window.addEventListener("load", () => {
+window.addEventListener("DOMContentLoaded", () => {
 
 
   prepareFirstSlide();
