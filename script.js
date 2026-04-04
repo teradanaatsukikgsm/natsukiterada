@@ -256,6 +256,7 @@ function prepareFirstSlide() {
 function enableSliderTransitions() {
   if (hero) {
     hero.classList.add("is-initialized");
+    hero.classList.add("is-visible");
   }
 }
 
