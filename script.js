@@ -54,9 +54,9 @@ const hero = document.querySelector(".hero-slider");
 const prevButton = document.querySelector(".hero-arrow-left");
 const nextButton = document.querySelector(".hero-arrow-right");
 
-let slideInterval;
+let slideInterval = null;
 let hoverHandler = null;
-let slideshowStarted = false;
+let sliderInitialized = false;
 
 function createShuffledOrder(length) {
   const order = Array.from({ length }, (_, i) => i);
@@ -108,8 +108,6 @@ if (fixedStartIndex !== -1) {
 let currentOrderIndex = 0;
 
 function showArrows() {
-  if (window.innerWidth <= 900) return;
-
   [prevButton, nextButton].forEach((btn) => {
     if (btn) {
       btn.style.opacity = "1";
@@ -278,48 +276,43 @@ function startSlideShow() {
 }
 
 function resetSlideShow() {
-  if (!slideshowStarted) return;
+  if (!sliderInitialized) return;
   startSlideShow();
 }
 
 function initSlider() {
-  if (!slides.length || slideshowStarted) return;
+  if (sliderInitialized || !slides.length) return;
 
-  slideshowStarted = true;
+  sliderInitialized = true;
   currentOrderIndex = 0;
   updateSlides();
   startSlideShow();
+}
 
-  if (prevButton) {
-    prevButton.addEventListener("click", () => {
-      if (window.innerWidth <= 900) return;
-      goToPrevSlide();
-      resetSlideShow();
-    });
-  }
-
-  if (nextButton) {
-    nextButton.addEventListener("click", () => {
-      if (window.innerWidth <= 900) return;
-      goToNextSlide();
-      resetSlideShow();
-    });
-  }
-
-  window.addEventListener("resize", () => {
-    updateArrowPositions();
-    if (window.innerWidth <= 900) {
-      hideArrows();
-    }
-  });
-
-  slides.forEach((slide) => {
-    const img = slide.querySelector(".hero-main-image");
-    if (img) {
-      img.addEventListener("load", updateArrowPositions);
-    }
+if (prevButton) {
+  prevButton.addEventListener("click", () => {
+    if (window.innerWidth <= 900) return;
+    goToPrevSlide();
+    resetSlideShow();
   });
 }
+
+if (nextButton) {
+  nextButton.addEventListener("click", () => {
+    if (window.innerWidth <= 900) return;
+    goToNextSlide();
+    resetSlideShow();
+  });
+}
+
+window.addEventListener("resize", updateArrowPositions);
+
+slides.forEach((slide) => {
+  const img = slide.querySelector(".hero-main-image");
+  if (img) {
+    img.addEventListener("load", updateArrowPositions);
+  }
+});
 
 /* =========================
    SMOOTH ARC LOADER
@@ -337,7 +330,8 @@ function animateRingLoader(timestamp) {
   const outro = 0.8;
   const total = intro + hold + outro;
 
-  const baseSpeed = 0.56;
+  const baseSpeed =
+    0.56;
   const baseAngle =
     elapsed * Math.PI * 2 * baseSpeed +
     Math.sin(elapsed * 1.05) * 0.08 +
@@ -387,7 +381,8 @@ function animateRingLoader(timestamp) {
 
     setTimeout(() => {
       if (loadingScreen) {
-        loadingScreen.style.transition = "opacity 1.15s ease, visibility 1.15s ease";
+        loadingScreen.style.transition =
+          "opacity 1.15s ease, visibility 1.15s ease";
         loadingScreen.classList.add("is-hidden");
       }
 
