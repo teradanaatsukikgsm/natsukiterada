@@ -1073,3 +1073,14 @@ body.is-loaded {
     padding-bottom: 120px;
   }
 }
+
+@media (max-width: 900px) {
+  .site-main.bio-main {
+    padding-top: 160px;
+    padding-bottom: 140px !important;
+  }
+
+  .site-footer {
+    bottom: 12px;
+  }
+}
