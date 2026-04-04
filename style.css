@@ -1155,3 +1155,40 @@ body.is-loaded {
   visibility: visible;
 }
 
+/* =========================
+   LOADER RESTORE
+========================= */
+
+.dot-ring-loader {
+  position: relative;
+  width: 90px;
+  height: 90px;
+}
+
+.ring-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 999px;
+  background: #111;
+  opacity: 0;
+  will-change: transform, opacity, filter;
+  transform: translate3d(0, 0, 0) scale(1);
+  backface-visibility: hidden;
+}
+
+/* =========================
+   HERO FIRST FADE IN
+========================= */
+
+.hero-slider {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.hero-slider.is-visible {
+  opacity: 1;
+}
