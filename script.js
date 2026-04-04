@@ -28,105 +28,6 @@ function smoother(t) {
 }
 
 /* =========================
-   SMOOTH ARC LOADER
-========================= */
-
-function animateRingLoader(timestamp) {
-  if (!ringLoader || ringDots.length !== 8 || loaderFinished) return;
-
-  if (!loaderStart) loaderStart = timestamp;
-
-  const elapsed = (timestamp - loaderStart) / 1000;
-
-  // ===== timing =====
-  const intro = 0.8;
-  const hold = 0.5;
-  const outro = 0.8;
-  const total = intro + hold + outro;
-
-  // ===== motion =====
-  const baseSpeed = 0.56;
-  const baseAngle =
-    elapsed * Math.PI * 2 * baseSpeed +
-    Math.sin(elapsed * 1.05) * 0.08 +
-    Math.sin(elapsed * 2.0 + 1.1) * 0.03;
-
-  const radius = 22;
-  const arcSpan = Math.PI * 1.28;
-  const count = ringDots.length;
-
-  const outroStart = intro + hold;
-  const outroElapsed = elapsed - outroStart;
-
-  ringDots.forEach((dot, i) => {
-    const t = i / (count - 1); // 0 = 先端, 1 = 後ろ
-
-    const angle = baseAngle - t * arcSpan;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-
-    const scale = 1.06 - t * 0.34;
-
-    const gray = Math.floor(18 + Math.pow(t, 1.4) * 205);
-    const color = `rgb(${gray}, ${gray}, ${gray})`;
-
-    const baseOpacity = 0.96 - t * 0.56;
-
-    // ===== intro =====
-    // 先端からかなり明確に順番に出す
-    // 後ろのドットほど開始を大きく遅らせる
-    const introDelay = t * 1.5;
-    const introSpan = 0.5;
-    const introRaw = (elapsed - introDelay) / introSpan;
-    const introP = smoother(introRaw);
-
-    // ===== outro =====
-    // 先端から順番に消す
-    const outroDelay = t * 0.62;
-    const outroSpan = 0.52;
-    const outroP = 1 - smoother((outroElapsed - outroDelay) / outroSpan);
-
-    const opacity = baseOpacity * clamp(introP, 0, 1) * clamp(outroP, 0, 1);
-
-    const blur = 0.1 + t * 0.55;
-
-    dot.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-    dot.style.opacity = `${clamp(opacity, 0, 1)}`;
-    dot.style.background = color;
-    dot.style.filter = `blur(${blur}px)`;
-  });
-
-  if (elapsed >= total) {
-    loaderFinished = true;
-
-    setTimeout(() => {
-      if (loadingScreen) {
-        loadingScreen.style.transition = "opacity 1.15s ease, visibility 1.15s ease";
-        loadingScreen.classList.add("is-hidden");
-      }
-    }, 180);
-
-    cancelAnimationFrame(loaderRAF);
-    return;
-  }
-
-  loaderRAF = requestAnimationFrame(animateRingLoader);
-}
-
-function startRingLoader() {
-  if (!ringLoader) return;
-  cancelAnimationFrame(loaderRAF);
-  loaderStart = null;
-  loaderFinished = false;
-  loaderRAF = requestAnimationFrame(animateRingLoader);
-}
-
-function stopRingLoader() {
-  loaderFinished = true;
-  cancelAnimationFrame(loaderRAF);
-}
-
-/* =========================
    MENU
 ========================= */
 
@@ -155,6 +56,7 @@ const nextButton = document.querySelector(".hero-arrow-right");
 
 let slideInterval;
 let hoverHandler = null;
+let slideshowStarted = false;
 
 function createShuffledOrder(length) {
   const order = Array.from({ length }, (_, i) => i);
@@ -206,6 +108,8 @@ if (fixedStartIndex !== -1) {
 let currentOrderIndex = 0;
 
 function showArrows() {
+  if (window.innerWidth <= 900) return;
+
   [prevButton, nextButton].forEach((btn) => {
     if (btn) {
       btn.style.opacity = "1";
@@ -224,6 +128,8 @@ function hideArrows() {
 }
 
 function updateArrowPositions() {
+  if (window.innerWidth <= 900) return;
+
   const activeSlide = document.querySelector(".hero-slide.is-active");
   if (!activeSlide || !hero || !prevButton || !nextButton) return;
 
@@ -250,6 +156,11 @@ function updateArrowPositions() {
 }
 
 function setupHoverArea() {
+  if (window.innerWidth <= 900) {
+    hideArrows();
+    return;
+  }
+
   hideArrows();
 
   const activeSlide = document.querySelector(".hero-slide.is-active");
@@ -349,12 +260,12 @@ function goToPrevSlide() {
 }
 
 function startSlideShow() {
-clearInterval(slideInterval);
+  clearTimeout(slideInterval);
 
   let isFirst = true;
 
   function scheduleNext() {
-    const delay = isFirst ? 6500 : 3800; // ←ここ調整ポイント
+    const delay = isFirst ? 6500 : 3800;
 
     slideInterval = setTimeout(() => {
       goToNextSlide();
@@ -366,17 +277,22 @@ clearInterval(slideInterval);
   scheduleNext();
 }
 
-
 function resetSlideShow() {
+  if (!slideshowStarted) return;
   startSlideShow();
 }
 
-if (slides.length > 0) {
+function initSlider() {
+  if (!slides.length || slideshowStarted) return;
+
+  slideshowStarted = true;
+  currentOrderIndex = 0;
   updateSlides();
   startSlideShow();
 
   if (prevButton) {
     prevButton.addEventListener("click", () => {
+      if (window.innerWidth <= 900) return;
       goToPrevSlide();
       resetSlideShow();
     });
@@ -384,12 +300,18 @@ if (slides.length > 0) {
 
   if (nextButton) {
     nextButton.addEventListener("click", () => {
+      if (window.innerWidth <= 900) return;
       goToNextSlide();
       resetSlideShow();
     });
   }
 
-  window.addEventListener("resize", updateArrowPositions);
+  window.addEventListener("resize", () => {
+    updateArrowPositions();
+    if (window.innerWidth <= 900) {
+      hideArrows();
+    }
+  });
 
   slides.forEach((slide) => {
     const img = slide.querySelector(".hero-main-image");
@@ -397,6 +319,103 @@ if (slides.length > 0) {
       img.addEventListener("load", updateArrowPositions);
     }
   });
+}
+
+/* =========================
+   SMOOTH ARC LOADER
+========================= */
+
+function animateRingLoader(timestamp) {
+  if (!ringLoader || ringDots.length !== 8 || loaderFinished) return;
+
+  if (!loaderStart) loaderStart = timestamp;
+
+  const elapsed = (timestamp - loaderStart) / 1000;
+
+  const intro = 0.8;
+  const hold = 0.5;
+  const outro = 0.8;
+  const total = intro + hold + outro;
+
+  const baseSpeed = 0.56;
+  const baseAngle =
+    elapsed * Math.PI * 2 * baseSpeed +
+    Math.sin(elapsed * 1.05) * 0.08 +
+    Math.sin(elapsed * 2.0 + 1.1) * 0.03;
+
+  const radius = 22;
+  const arcSpan = Math.PI * 1.28;
+  const count = ringDots.length;
+
+  const outroStart = intro + hold;
+  const outroElapsed = elapsed - outroStart;
+
+  ringDots.forEach((dot, i) => {
+    const t = i / (count - 1);
+
+    const angle = baseAngle - t * arcSpan;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+
+    const scale = 1.06 - t * 0.34;
+
+    const gray = Math.floor(18 + Math.pow(t, 1.4) * 205);
+    const color = `rgb(${gray}, ${gray}, ${gray})`;
+
+    const baseOpacity = 0.96 - t * 0.56;
+
+    const introDelay = t * 1.5;
+    const introSpan = 0.5;
+    const introRaw = (elapsed - introDelay) / introSpan;
+    const introP = smoother(introRaw);
+
+    const outroDelay = t * 0.62;
+    const outroSpan = 0.52;
+    const outroP = 1 - smoother((outroElapsed - outroDelay) / outroSpan);
+
+    const opacity = baseOpacity * clamp(introP, 0, 1) * clamp(outroP, 0, 1);
+    const blur = 0.1 + t * 0.55;
+
+    dot.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+    dot.style.opacity = `${clamp(opacity, 0, 1)}`;
+    dot.style.background = color;
+    dot.style.filter = `blur(${blur}px)`;
+  });
+
+  if (elapsed >= total) {
+    loaderFinished = true;
+
+    setTimeout(() => {
+      if (loadingScreen) {
+        loadingScreen.style.transition = "opacity 1.15s ease, visibility 1.15s ease";
+        loadingScreen.classList.add("is-hidden");
+      }
+
+      initSlider();
+    }, 180);
+
+    cancelAnimationFrame(loaderRAF);
+    return;
+  }
+
+  loaderRAF = requestAnimationFrame(animateRingLoader);
+}
+
+function startRingLoader() {
+  if (!ringLoader) {
+    initSlider();
+    return;
+  }
+
+  cancelAnimationFrame(loaderRAF);
+  loaderStart = null;
+  loaderFinished = false;
+  loaderRAF = requestAnimationFrame(animateRingLoader);
+}
+
+function stopRingLoader() {
+  loaderFinished = true;
+  cancelAnimationFrame(loaderRAF);
 }
 
 /* =========================
@@ -408,6 +427,8 @@ window.addEventListener("load", () => {
 
   if (loadingScreen) {
     startRingLoader();
+  } else {
+    initSlider();
   }
 
   updateArrowPositions();
@@ -417,14 +438,12 @@ window.addEventListener("load", () => {
    IMAGE PROTECTION
 ========================= */
 
-// 画像だけ右クリック禁止に変更
 document.addEventListener("contextmenu", (e) => {
   if (e.target.tagName === "IMG") {
     e.preventDefault();
   }
 });
 
-// 画像だけドラッグ禁止に変更
 document.addEventListener("dragstart", (e) => {
   if (e.target.tagName === "IMG") {
     e.preventDefault();
@@ -461,7 +480,6 @@ document.querySelectorAll(".menu-links a").forEach((link) => {
     link.classList.add("active");
   }
 
-  // ローカルやトップで index.html が省略されるケース用
   if ((currentPath === "" || currentPath === "/") && href === "index.html") {
     link.classList.add("active");
   }
