@@ -16,6 +16,16 @@ let slideInterval = null;
 let hoverHandler = null;
 let sliderReady = false;
 
+/* swipe */
+let touchStartX = 0;
+let touchStartY = 0;
+let touchCurrentX = 0;
+let touchCurrentY = 0;
+let isTouching = false;
+let isDraggingSlider = false;
+let swipeLocked = false;
+let swipeHintTimer = null;
+
 /* =========================
    LOADER UTILS
 ========================= */
@@ -55,6 +65,7 @@ const slides = document.querySelectorAll(".hero-slide");
 const hero = document.querySelector(".hero-slider");
 const prevButton = document.querySelector(".hero-arrow-left");
 const nextButton = document.querySelector(".hero-arrow-right");
+const swipeHint = document.querySelector(".swipe-hint");
 
 function createShuffledOrder(length) {
   const order = Array.from({ length }, (_, i) => i);
@@ -301,6 +312,119 @@ function resetSlideShow() {
   startSlideShow();
 }
 
+/* =========================
+   MOBILE SWIPE
+========================= */
+
+function showSwipeHintBriefly() {
+  if (!swipeHint || window.innerWidth > 900) return;
+
+  clearTimeout(swipeHintTimer);
+
+  swipeHint.classList.remove("is-hidden");
+  swipeHint.classList.add("is-visible");
+
+  swipeHintTimer = setTimeout(() => {
+    swipeHint.classList.remove("is-visible");
+    swipeHint.classList.add("is-hidden");
+  }, 1400);
+}
+
+function handleSwipe(deltaX) {
+  if (!sliderReady || swipeLocked || Math.abs(deltaX) < 46) return;
+
+  swipeLocked = true;
+
+  if (deltaX < 0) {
+    goToNextSlide();
+  } else {
+    goToPrevSlide();
+  }
+
+  resetSlideShow();
+
+  setTimeout(() => {
+    swipeLocked = false;
+  }, 450);
+}
+
+function setupMobileSwipe() {
+  if (!hero) return;
+
+  hero.addEventListener(
+    "touchstart",
+    (e) => {
+      if (window.innerWidth > 900) return;
+      if (!e.touches || e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchCurrentX = touch.clientX;
+      touchCurrentY = touch.clientY;
+      isTouching = true;
+      isDraggingSlider = false;
+    },
+    { passive: true }
+  );
+
+  hero.addEventListener(
+    "touchmove",
+    (e) => {
+      if (window.innerWidth > 900) return;
+      if (!isTouching || !e.touches || e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      touchCurrentX = touch.clientX;
+      touchCurrentY = touch.clientY;
+
+      const deltaX = touchCurrentX - touchStartX;
+      const deltaY = touchCurrentY - touchStartY;
+
+      if (
+        !isDraggingSlider &&
+        Math.abs(deltaX) > 12 &&
+        Math.abs(deltaX) > Math.abs(deltaY)
+      ) {
+        isDraggingSlider = true;
+      }
+
+      if (isDraggingSlider) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+
+  hero.addEventListener(
+    "touchend",
+    () => {
+      if (window.innerWidth > 900) return;
+      if (!isTouching) return;
+
+      const deltaX = touchCurrentX - touchStartX;
+      const deltaY = touchCurrentY - touchStartY;
+
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        handleSwipe(deltaX);
+      }
+
+      isTouching = false;
+      isDraggingSlider = false;
+    },
+    { passive: true }
+  );
+
+  hero.addEventListener(
+    "touchcancel",
+    () => {
+      isTouching = false;
+      isDraggingSlider = false;
+    },
+    { passive: true }
+  );
+}
+
 if (prevButton) {
   prevButton.addEventListener("click", () => {
     if (window.innerWidth <= 900) return;
@@ -405,6 +529,7 @@ function animateRingLoader(timestamp) {
       enableSliderTransitions();
       sliderReady = true;
       startSlideShow();
+      showSwipeHintBriefly();
     }, 180);
 
     cancelAnimationFrame(loaderRAF);
@@ -419,6 +544,7 @@ function startRingLoader() {
     enableSliderTransitions();
     sliderReady = true;
     startSlideShow();
+    showSwipeHintBriefly();
     return;
   }
 
@@ -436,6 +562,7 @@ window.addEventListener("load", () => {
   document.body.classList.add("is-loaded");
 
   prepareFirstSlide();
+  setupMobileSwipe();
 
   if (loadingScreen) {
     startRingLoader();
@@ -443,6 +570,7 @@ window.addEventListener("load", () => {
     enableSliderTransitions();
     sliderReady = true;
     startSlideShow();
+    showSwipeHintBriefly();
   }
 
   updateArrowPositions();
