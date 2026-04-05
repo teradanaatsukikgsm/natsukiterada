@@ -1410,3 +1410,90 @@ body.is-loaded {
     z-index: 40;
   }
 }
+
+/* =========================
+   MOBILE SWIPE HINT
+========================= */
+
+.swipe-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+  z-index: 40;
+
+  font-size: 12px; /* PCは控えめ */
+  font-style: italic;
+  letter-spacing: 0.09em;
+
+  color: rgba(17, 17, 17, 0.36);
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  white-space: nowrap;
+}
+
+/* ライン */
+.swipe-hint::before,
+.swipe-hint::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 18px; /* PCはやや控えめ */
+  height: 1px;
+  background: rgba(17, 17, 17, 0.18);
+}
+
+.swipe-hint::before {
+  right: calc(100% + 10px);
+}
+
+.swipe-hint::after {
+  left: calc(100% + 10px);
+}
+
+/* 表示状態 */
+.swipe-hint.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.swipe-hint.is-hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(4px);
+}
+
+/* PCでは出さない（保険） */
+@media (min-width: 901px) {
+  .swipe-hint {
+    display: none;
+  }
+}
+
+/* =========================
+   MOBILE ONLY TUNING
+========================= */
+
+@media (max-width: 900px) {
+  .hero-slider {
+    touch-action: pan-y;
+  }
+
+  .hero-image-wrapper,
+  .hero-main-image,
+  .image-blocker {
+    touch-action: pan-y;
+  }
+
+  .swipe-hint {
+    bottom: 64px;
+    font-size: 13px; /* ← スマホだけ大きく */
+    letter-spacing: 0.1em;
+  }
+
+  .swipe-hint::before,
+  .swipe-hint::after {
+    width: 22px; /* ← スマホだけ少し長く */
+  }
+}
