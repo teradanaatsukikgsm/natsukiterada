@@ -214,16 +214,18 @@ function updateSlides() {
   const next2Index = slideOrder[next2OrderIndex];
 
   const activeSlide = slides[activeIndex];
+  if (!activeSlide) return;
+
   activeSlide.classList.add("is-active");
 
   const prevImgSrc =
-    slides[prevIndex].querySelector(".hero-main-image")?.src || "";
+    slides[prevIndex]?.querySelector(".hero-main-image")?.src || "";
   const prev2ImgSrc =
-    slides[prev2Index].querySelector(".hero-main-image")?.src || "";
+    slides[prev2Index]?.querySelector(".hero-main-image")?.src || "";
   const nextImgSrc =
-    slides[nextIndex].querySelector(".hero-main-image")?.src || "";
+    slides[nextIndex]?.querySelector(".hero-main-image")?.src || "";
   const next2ImgSrc =
-    slides[next2Index].querySelector(".hero-main-image")?.src || "";
+    slides[next2Index]?.querySelector(".hero-main-image")?.src || "";
 
   const left1 = activeSlide.querySelector(".hero-preview-left-1");
   const left2 = activeSlide.querySelector(".hero-preview-left-2");
@@ -278,12 +280,14 @@ function enableSliderTransitions() {
 }
 
 function goToNextSlide() {
+  if (!slides.length) return;
   currentOrderIndex = (currentOrderIndex + 1) % slides.length;
   updateSlides();
   showArrows();
 }
 
 function goToPrevSlide() {
+  if (!slides.length) return;
   currentOrderIndex = (currentOrderIndex - 1 + slides.length) % slides.length;
   updateSlides();
   showArrows();
@@ -313,7 +317,7 @@ function resetSlideShow() {
 }
 
 /* =========================
-   MOBILE SWIPE
+   MOBILE SWIPE + HINT
 ========================= */
 
 function showSwipeHintBriefly() {
@@ -443,6 +447,7 @@ if (nextButton) {
 
 window.addEventListener("resize", () => {
   updateArrowPositions();
+
   if (window.innerWidth <= 900) {
     hideArrows();
   }
