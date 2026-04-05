@@ -1267,3 +1267,74 @@ body.is-loaded {
     font-size: 10px;
   }
 }
+
+/* =========================
+   MOBILE SWIPE HINT
+========================= */
+
+.swipe-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  z-index: 12;
+  font-size: 11px;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  color: rgba(17, 17, 17, 0.34);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  white-space: nowrap;
+}
+
+.swipe-hint::before,
+.swipe-hint::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 1px;
+  background: rgba(17, 17, 17, 0.18);
+}
+
+.swipe-hint::before {
+  right: calc(100% + 10px);
+}
+
+.swipe-hint::after {
+  left: calc(100% + 10px);
+}
+
+.swipe-hint.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.swipe-hint.is-hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(4px);
+}
+
+@media (min-width: 901px) {
+  .swipe-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-slider {
+    touch-action: pan-y;
+  }
+
+  .hero-image-wrapper,
+  .hero-main-image,
+  .image-blocker {
+    touch-action: pan-y;
+  }
+
+  .swipe-hint {
+    bottom: 28px;
+    font-size: 10px;
+  }
+}
