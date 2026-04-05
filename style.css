@@ -1497,3 +1497,15 @@ body.is-loaded {
     width: 22px; /* ← スマホだけ少し長く */
   }
 }
+
+@keyframes swipeHintMove {
+  0% { transform: translateX(-50%) translateX(0); }
+  30% { transform: translateX(-50%) translateX(-6px); }
+  60% { transform: translateX(-50%) translateX(6px); }
+  100% { transform: translateX(-50%) translateX(0); }
+}
+
+.swipe-hint.is-visible {
+  opacity: 1;
+  animation: swipeHintMove 1.2s ease;
+}
