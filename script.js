@@ -325,7 +325,7 @@ function showSwipeHintBriefly() {
 
   clearTimeout(swipeHintTimer);
 
-  swipeHint.classList.remove("is-hidden", "is-hidden");
+  swipeHint.classList.remove("is-visible", "is-hidden");
 
    /* アニメーション再始動のために強制リフロー */
   void swipeHint.offsetWidth;
