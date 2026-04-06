@@ -1559,3 +1559,80 @@ body.is-loaded {
     width: 22px !important;
   }
 }
+
+/* =========================
+   SWIPE HINT FINAL FIX
+========================= */
+
+@keyframes swipeHintFinalMove {
+  0% {
+    transform: translateX(-50%) translateY(0) translateX(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(-50%) translateY(0) translateX(-12px);
+    opacity: 1;
+  }
+  65% {
+    transform: translateX(-50%) translateY(0) translateX(12px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) translateX(0);
+    opacity: 1;
+  }
+}
+
+.swipe-hint {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 64px !important;
+  transform: translateX(-50%) translateY(0) !important;
+  z-index: 999 !important;
+  font-size: 13px !important;
+  font-style: italic !important;
+  letter-spacing: 0.1em !important;
+  color: rgba(17, 17, 17, 0.42) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+  will-change: transform, opacity !important;
+}
+
+.swipe-hint::before,
+.swipe-hint::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 50% !important;
+  width: 22px !important;
+  height: 1px !important;
+  background: rgba(17, 17, 17, 0.22) !important;
+}
+
+.swipe-hint::before {
+  right: calc(100% + 10px) !important;
+}
+
+.swipe-hint::after {
+  left: calc(100% + 10px) !important;
+}
+
+.swipe-hint.is-visible {
+  opacity: 1 !important;
+  animation: swipeHintFinalMove 1.35s ease-out 1 !important;
+}
+
+.swipe-hint.is-hidden {
+  opacity: 0 !important;
+  transform: translateX(-50%) translateY(4px) !important;
+  animation: none !important;
+}
+
+@media (min-width: 901px) {
+  .swipe-hint {
+    display: none !important;
+  }
+}
