@@ -1636,3 +1636,46 @@ body.is-loaded {
     display: none !important;
   }
 }
+
+/* =========================
+   SWIPE HINT FINAL LAST OVERRIDE
+========================= */
+
+@keyframes swipeHintFinalOnly {
+  0% {
+    transform: translateX(-50%) translateY(-2px) translateX(0);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  40% {
+    transform: translateX(-50%) translateY(-2px) translateX(-10px);
+    opacity: 1;
+  }
+  68% {
+    transform: translateX(-50%) translateY(-2px) translateX(10px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-2px) translateX(0);
+    opacity: 1;
+  }
+}
+
+.swipe-hint {
+  transform: translateX(-50%) translateY(-2px) !important;
+  transition: none !important;
+  will-change: transform, opacity !important;
+}
+
+.swipe-hint.is-visible {
+  opacity: 1 !important;
+  animation: swipeHintFinalOnly 1.15s ease-out 1 !important;
+}
+
+.swipe-hint.is-hidden {
+  opacity: 0 !important;
+  animation: none !important;
+  transform: translateX(-50%) translateY(4px) !important;
+}
