@@ -1679,3 +1679,9 @@ body.is-loaded {
   animation: none !important;
   transform: translateX(-50%) translateY(4px) !important;
 }
+
+.swipe-hint.is-hidden {
+  opacity: 0 !important;
+  animation: none !important;
+  transform: translateX(-50%) translateY(10px) !important;
+}
