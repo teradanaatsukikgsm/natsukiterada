@@ -331,7 +331,7 @@ function showSwipeHintBriefly() {
   swipeHintTimer = setTimeout(() => {
     swipeHint.classList.remove("is-visible");
     swipeHint.classList.add("is-hidden");
-  }, 1400);
+  }, 2200);
 }
 
 function handleSwipe(deltaX) {
