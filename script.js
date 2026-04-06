@@ -326,10 +326,18 @@ function showSwipeHintBriefly() {
   clearTimeout(swipeHintTimer);
 
   swipeHint.classList.remove("is-visible", "is-hidden");
+   
+  /* いったんアニメーションを完全リセット */
+  swipeHint.style.animation = "none";
   void swipeHint.offsetWidth;   
+   
   swipeHint.classList.add("is-visible");
 
+   /* JSから直接アニメーション指定して、CSS競合を回避 */
+  swipeHint.style.animation = "swipeHintOnlyFinal 1.2s ease-out 1";
+
   swipeHintTimer = setTimeout(() => {
+    swipeHint.style.animation = "none";
     swipeHint.classList.remove("is-visible");
     swipeHint.classList.add("is-hidden");
   }, 2200);
