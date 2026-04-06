@@ -587,6 +587,10 @@ window.addEventListener("load", () => {
   }
 
   updateArrowPositions();
+
+   setTimeout(() => {
+    showSwipeHintBriefly();
+  }, 250);
 });
 
 /* =========================
