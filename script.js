@@ -325,7 +325,11 @@ function showSwipeHintBriefly() {
 
   clearTimeout(swipeHintTimer);
 
-  swipeHint.classList.remove("is-hidden");
+  swipeHint.classList.remove("is-hidden", "is-hidden");
+
+   /* アニメーション再始動のために強制リフロー */
+  void swipeHint.offsetWidth;
+   
   swipeHint.classList.add("is-visible");
 
   swipeHintTimer = setTimeout(() => {
@@ -350,6 +354,10 @@ function handleSwipe(deltaX) {
   setTimeout(() => {
     swipeLocked = false;
   }, 450);
+
+   setTimeout(() => {
+    showSwipeHintBriefly();
+  }, 700);
 }
 
 function setupMobileSwipe() {
