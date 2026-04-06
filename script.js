@@ -593,6 +593,12 @@ window.addEventListener("load", () => {
   }, 250);
 });
 
+window.addEventListener("pageshow", () => {
+  setTimeout(() => {
+    showSwipeHintBriefly();
+  }, 250);
+});
+
 /* =========================
    IMAGE PROTECTION
 ========================= */
