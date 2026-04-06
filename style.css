@@ -1665,7 +1665,6 @@ body.is-loaded {
 
 .swipe-hint {
   transform: translateX(-50%) translateY(-2px) !important;
-  transition: none !important;
   will-change: transform, opacity !important;
 }
 
@@ -1716,6 +1715,27 @@ body.is-loaded {
   transform: translateX(-50%) translateY(-2px) !important;
   opacity: 0 !important;
   transition: opacity 0.45s ease, transform 0.45s ease !important;
+  will-change: transform, opacity !important;
+}
+
+.swipe-hint.is-visible {
+  opacity: 1 !important;
+  animation: swipeHintFinalOnly 1.15s ease-out 1 !important;
+}
+
+.swipe-hint.is-hidden {
+  opacity: 0 !important;
+  animation: none !important;
+  transform: translateX(-50%) translateY(10px) !important;
+}
+
+.swipe-hint {
+  transform: translateX(-50%) translateY(-2px) !important;
+  opacity: 0 !important;
+
+  /* ← これが復活ポイント */
+  transition: opacity 0.45s ease, transform 0.45s ease !important;
+
   will-change: transform, opacity !important;
 }
 
