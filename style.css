@@ -1198,450 +1198,10 @@ body.is-loaded {
 }
 
 /* =========================
-   MOBILE SWIPE HINT
+   SWIPE HINT ONLY FINAL
 ========================= */
 
-.swipe-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 34px;
-  transform: translateX(-50%);
-  z-index: 12;
-  font-size: 11px;
-  font-style: italic;
-  letter-spacing: 0.08em;
-  color: rgba(17, 17, 17, 0.34);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  white-space: nowrap;
-}
-
-.swipe-hint::before,
-.swipe-hint::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 1px;
-  background: rgba(17, 17, 17, 0.18);
-}
-
-.swipe-hint::before {
-  right: calc(100% + 10px);
-}
-
-.swipe-hint::after {
-  left: calc(100% + 10px);
-}
-
-.swipe-hint.is-visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.swipe-hint.is-hidden {
-  opacity: 0;
-  transform: translateX(-50%) translateY(4px);
-}
-
-@media (min-width: 901px) {
-  .swipe-hint {
-    display: none;
-  }
-}
-
-@media (max-width: 900px) {
-  .hero-slider {
-    touch-action: pan-y;
-  }
-
-  .hero-image-wrapper,
-  .hero-main-image,
-  .image-blocker {
-    touch-action: pan-y;
-  }
-
-  .swipe-hint {
-    bottom: 28px;
-    font-size: 10px;
-  }
-}
-
-/* =========================
-   MOBILE SWIPE HINT
-========================= */
-
-.swipe-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 34px;
-  transform: translateX(-50%);
-  z-index: 12;
-  font-size: 11px;
-  font-style: italic;
-  letter-spacing: 0.08em;
-  color: rgba(17, 17, 17, 0.34);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  white-space: nowrap;
-}
-
-.swipe-hint::before,
-.swipe-hint::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 1px;
-  background: rgba(17, 17, 17, 0.18);
-}
-
-.swipe-hint::before {
-  right: calc(100% + 10px);
-}
-
-.swipe-hint::after {
-  left: calc(100% + 10px);
-}
-
-.swipe-hint.is-visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.swipe-hint.is-hidden {
-  opacity: 0;
-  transform: translateX(-50%) translateY(4px);
-}
-
-@media (min-width: 901px) {
-  .swipe-hint {
-    display: none;
-  }
-}
-
-@media (max-width: 900px) {
-  .hero-slider {
-    touch-action: pan-y;
-  }
-
-  .hero-image-wrapper,
-  .hero-main-image,
-  .image-blocker {
-    touch-action: pan-y;
-  }
-
-  .swipe-hint {
-    bottom: 28px;
-    font-size: 10px;
-  }
-}
-
-/* =========================
-   MOBILE SWIPE HINT
-========================= */
-
-.swipe-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 72px;
-  transform: translateX(-50%);
-  z-index: 40;
-  font-size: 11px;
-  font-style: italic;
-  letter-spacing: 0.08em;
-  color: rgba(17, 17, 17, 0.34);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  white-space: nowrap;
-}
-
-.swipe-hint::before,
-.swipe-hint::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 1px;
-  background: rgba(17, 17, 17, 0.18);
-}
-
-.swipe-hint::before {
-  right: calc(100% + 10px);
-}
-
-.swipe-hint::after {
-  left: calc(100% + 10px);
-}
-
-.swipe-hint.is-visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.swipe-hint.is-hidden {
-  opacity: 0;
-  transform: translateX(-50%) translateY(4px);
-}
-
-@media (min-width: 901px) {
-  .swipe-hint {
-    display: none;
-  }
-}
-
-@media (max-width: 900px) {
-  .hero-slider {
-    touch-action: pan-y;
-  }
-
-  .hero-image-wrapper,
-  .hero-main-image,
-  .image-blocker {
-    touch-action: pan-y;
-  }
-
-  .swipe-hint {
-    bottom: 64px;
-    font-size: 10px;
-    z-index: 40;
-  }
-}
-
-/* =========================
-   MOBILE SWIPE HINT
-========================= */
-
-.swipe-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 72px;
-  transform: translateX(-50%);
-  z-index: 40;
-
-  font-size: 12px; /* PCは控えめ */
-  font-style: italic;
-  letter-spacing: 0.09em;
-
-  color: rgba(17, 17, 17, 0.36);
-  opacity: 0;
-  pointer-events: none;
-
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  white-space: nowrap;
-}
-
-/* ライン */
-.swipe-hint::before,
-.swipe-hint::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 18px; /* PCはやや控えめ */
-  height: 1px;
-  background: rgba(17, 17, 17, 0.18);
-}
-
-.swipe-hint::before {
-  right: calc(100% + 10px);
-}
-
-.swipe-hint::after {
-  left: calc(100% + 10px);
-}
-
-/* 表示状態 */
-.swipe-hint.is-visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.swipe-hint.is-hidden {
-  opacity: 0;
-  transform: translateX(-50%) translateY(4px);
-}
-
-/* PCでは出さない（保険） */
-@media (min-width: 901px) {
-  .swipe-hint {
-    display: none;
-  }
-}
-
-/* =========================
-   MOBILE ONLY TUNING
-========================= */
-
-@media (max-width: 900px) {
-  .hero-slider {
-    touch-action: pan-y;
-  }
-
-  .hero-image-wrapper,
-  .hero-main-image,
-  .image-blocker {
-    touch-action: pan-y;
-  }
-
-  .swipe-hint {
-    bottom: 64px;
-    font-size: 13px; /* ← スマホだけ大きく */
-    letter-spacing: 0.1em;
-  }
-
-  .swipe-hint::before,
-  .swipe-hint::after {
-    width: 22px; /* ← スマホだけ少し長く */
-  }
-}
-
-@keyframes swipeHintMove {
-  0% { transform: translateX(-50%) translateX(0); }
-  30% { transform: translateX(-50%) translateX(-6px); }
-  60% { transform: translateX(-50%) translateX(6px); }
-  100% { transform: translateX(-50%) translateX(0); }
-}
-
-.swipe-hint.is-visible {
-  opacity: 1;
-  animation: swipeHintMove 1.2s ease;
-}
-
-/* =========================
-   SWIPE HINT FORCE OVERRIDE
-========================= */
-
-@keyframes swipeHintMoveForce {
-  0% {
-    transform: translateX(-50%) translateY(-2px) translateX(0);
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  45% {
-    transform: translateX(-50%) translateY(-2px) translateX(-7px);
-  }
-  70% {
-    transform: translateX(-50%) translateY(-2px) translateX(7px);
-  }
-  100% {
-    transform: translateX(-50%) translateY(-2px) translateX(0);
-    opacity: 1;
-  }
-}
-
-/* 基本強制上書き */
-.swipe-hint {
-  transform: translateX(-50%) translateY(-2px) !important;
-  z-index: 999 !important;
-}
-
-/* 表示時 */
-.swipe-hint.is-visible {
-  animation: swipeHintMoveForce 1.1s ease 1 !important;
-  opacity: 1 !important;
-}
-
-/* スマホだけ強化 */
-@media (max-width: 900px) {
-  .swipe-hint {
-    bottom: 64px !important;
-    font-size: 13px !important;
-    letter-spacing: 0.1em !important;
-  }
-
-  .swipe-hint::before,
-  .swipe-hint::after {
-    width: 22px !important;
-  }
-}
-
-/* =========================
-   SWIPE HINT FINAL FIX
-========================= */
-
-@keyframes swipeHintFinalMove {
-  0% {
-    transform: translateX(-50%) translateY(0) translateX(0);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  35% {
-    transform: translateX(-50%) translateY(0) translateX(-12px);
-    opacity: 1;
-  }
-  65% {
-    transform: translateX(-50%) translateY(0) translateX(12px);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-50%) translateY(0) translateX(0);
-    opacity: 1;
-  }
-}
-
-.swipe-hint {
-  position: absolute !important;
-  left: 50% !important;
-  bottom: 64px !important;
-  transform: translateX(-50%) translateY(0) !important;
-  z-index: 999 !important;
-  font-size: 13px !important;
-  font-style: italic !important;
-  letter-spacing: 0.1em !important;
-  color: rgba(17, 17, 17, 0.42) !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  white-space: nowrap !important;
-  will-change: transform, opacity !important;
-}
-
-.swipe-hint::before,
-.swipe-hint::after {
-  content: "" !important;
-  position: absolute !important;
-  top: 50% !important;
-  width: 22px !important;
-  height: 1px !important;
-  background: rgba(17, 17, 17, 0.22) !important;
-}
-
-.swipe-hint::before {
-  right: calc(100% + 10px) !important;
-}
-
-.swipe-hint::after {
-  left: calc(100% + 10px) !important;
-}
-
-.swipe-hint.is-visible {
-  opacity: 1 !important;
-  animation: swipeHintFinalMove 1.35s ease-out 1 !important;
-}
-
-.swipe-hint.is-hidden {
-  opacity: 0 !important;
-  transform: translateX(-50%) translateY(4px) !important;
-  animation: none !important;
-}
-
-@media (min-width: 901px) {
-  .swipe-hint {
-    display: none !important;
-  }
-}
-
-/* =========================
-   SWIPE HINT FINAL LAST OVERRIDE
-========================= */
-
-@keyframes swipeHintFinalOnly {
+@keyframes swipeHintOnlyFinal {
   0% {
     transform: translateX(-50%) translateY(-2px) translateX(0);
     opacity: 0;
@@ -1664,88 +1224,52 @@ body.is-loaded {
 }
 
 .swipe-hint {
-  transform: translateX(-50%) translateY(-2px) !important;
-  will-change: transform, opacity !important;
+  position: absolute;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%) translateY(-2px);
+  z-index: 999;
+  font-size: 13px;
+  font-style: italic;
+  letter-spacing: 0.1em;
+  color: rgba(17, 17, 17, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  will-change: transform, opacity;
+}
+
+.swipe-hint::before,
+.swipe-hint::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 1px;
+  background: rgba(17, 17, 17, 0.22);
+}
+
+.swipe-hint::before {
+  right: calc(100% + 10px);
+}
+
+.swipe-hint::after {
+  left: calc(100% + 10px);
 }
 
 .swipe-hint.is-visible {
-  opacity: 1 !important;
-  animation: swipeHintFinalOnly 1.15s ease-out 1 !important;
+  opacity: 1;
+  animation: swipeHintOnlyFinal 1.2s ease-out 1;
 }
 
 .swipe-hint.is-hidden {
-  opacity: 0 !important;
-  animation: none !important;
-  transform: translateX(-50%) translateY(4px) !important;
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
 }
 
-.swipe-hint.is-hidden {
-  opacity: 0 !important;
-  animation: none !important;
-  transform: translateX(-50%) translateY(10px) !important;
-}
-
-/* =========================
-   SWIPE HINT FINAL
-========================= */
-
-@keyframes swipeHintFinalOnly {
-  0% {
-    transform: translateX(-50%) translateY(-2px) translateX(0);
-    opacity: 0;
+@media (min-width: 901px) {
+  .swipe-hint {
+    display: none;
   }
-  18% {
-    opacity: 1;
-  }
-  40% {
-    transform: translateX(-50%) translateY(-2px) translateX(-10px);
-    opacity: 1;
-  }
-  68% {
-    transform: translateX(-50%) translateY(-2px) translateX(10px);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-50%) translateY(-2px) translateX(0);
-    opacity: 1;
-  }
-}
-
-.swipe-hint {
-  transform: translateX(-50%) translateY(-2px) !important;
-  opacity: 0 !important;
-  transition: opacity 0.45s ease, transform 0.45s ease !important;
-  will-change: transform, opacity !important;
-}
-
-.swipe-hint.is-visible {
-  opacity: 1 !important;
-  animation: swipeHintFinalOnly 1.15s ease-out 1 !important;
-}
-
-.swipe-hint.is-hidden {
-  opacity: 0 !important;
-  animation: none !important;
-  transform: translateX(-50%) translateY(10px) !important;
-}
-
-.swipe-hint {
-  transform: translateX(-50%) translateY(-2px) !important;
-  opacity: 0 !important;
-
-  /* ← これが復活ポイント */
-  transition: opacity 0.45s ease, transform 0.45s ease !important;
-
-  will-change: transform, opacity !important;
-}
-
-.swipe-hint.is-visible {
-  opacity: 1 !important;
-  animation: swipeHintFinalOnly 1.15s ease-out 1 !important;
-}
-
-.swipe-hint.is-hidden {
-  opacity: 0 !important;
-  animation: none !important;
-  transform: translateX(-50%) translateY(10px) !important;
 }
