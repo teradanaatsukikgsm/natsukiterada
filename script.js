@@ -642,3 +642,4 @@ document.querySelectorAll(".menu-links a").forEach((link) => {
     link.classList.add("active");
   }
 });
+
