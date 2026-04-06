@@ -354,10 +354,6 @@ function handleSwipe(deltaX) {
   setTimeout(() => {
     swipeLocked = false;
   }, 450);
-
-   setTimeout(() => {
-    showSwipeHintBriefly();
-  }, 700);
 }
 
 function setupMobileSwipe() {
