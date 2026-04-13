@@ -329,13 +329,10 @@ function showSwipeHintBriefly() {
 
   swipeHint.classList.remove("is-visible", "is-hidden");
 
-  /* いったんアニメーションを完全リセット */
   swipeHint.style.animation = "none";
   void swipeHint.offsetWidth;
 
   swipeHint.classList.add("is-visible");
-
-  /* JSから直接アニメーション指定して、CSS競合を回避 */
   swipeHint.style.animation = "swipeHintOnlyFinal 1.2s ease-out 1";
 
   swipeHintTimer = setTimeout(() => {
@@ -527,13 +524,6 @@ function waitForActiveSlideImage(callback) {
   img.addEventListener("error", onReady, { once: true });
 }
 
-function revealHomeBodyInstantly() {
-  document.body.style.transition = "none";
-  document.body.classList.add("is-loaded");
-  void document.body.offsetWidth;
-  document.body.style.transition = "";
-}
-
 /* =========================
    SMOOTH ARC LOADER
 ========================= */
@@ -545,13 +535,9 @@ function finishLoadingExperience() {
 
   const startExperience = () => {
     if (loadingScreen) {
-      revealHomeBodyInstantly();
-
       loadingScreen.style.transition =
         "opacity 0.85s ease, visibility 0.85s ease";
       loadingScreen.classList.add("is-hidden");
-    } else {
-      document.body.classList.add("is-loaded");
     }
 
     enableSliderTransitions();
@@ -670,7 +656,10 @@ function initializePage() {
   if (pageInitialized) return;
   pageInitialized = true;
 
-  if (!loadingScreen) {
+  if (loadingScreen) {
+    document.body.classList.add("is-loaded");
+    loadingScreen.classList.remove("is-hidden");
+  } else {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         document.body.classList.add("is-loaded");
