@@ -707,6 +707,8 @@ async function bootHomeWhenReady() {
       }
     }
 
+    await new Promise((resolve) => doubleRAF(resolve));
+
     enableSliderTransitions();
     sliderReady = true;
     startSlideShow();
