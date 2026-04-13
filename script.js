@@ -11,6 +11,7 @@ const ringDots = document.querySelectorAll(".dot-ring-loader .ring-dot");
 
 let loaderRAF = null;
 let loaderStart = null;
+let loaderVisibleAt = null;
 let slideInterval = null;
 let hoverHandler = null;
 let sliderReady = false;
@@ -586,6 +587,7 @@ function startRingLoader() {
 
   cancelAnimationFrame(loaderRAF);
   loaderStart = null;
+  loaderVisibleAt = performance.now();
   loaderRAF = requestAnimationFrame(animateRingLoader);
 }
 
@@ -602,6 +604,14 @@ async function bootHomeWhenReady() {
   try {
     await waitForWindowLoad();
     await waitForActiveSlideImage();
+
+    const minLoaderMs = 700;
+    const elapsed = loaderVisibleAt ? performance.now() - loaderVisibleAt : 0;
+    const remaining = Math.max(0, minLoaderMs - elapsed);
+
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
   } finally {
     stopRingLoader();
 
