@@ -11,15 +11,10 @@ const ringDots = document.querySelectorAll(".dot-ring-loader .ring-dot");
 
 let loaderRAF = null;
 let loaderStart = null;
-let loaderFinished = false;
-let loaderOutroStart = null;
 let slideInterval = null;
 let hoverHandler = null;
 let sliderReady = false;
 let pageInitialized = false;
-let loaderFallbackTimer = null;
-let firstImageReady = false;
-let firstImagePrimeTimer = null;
 
 /* swipe */
 let touchStartX = 0;
@@ -42,6 +37,22 @@ function clamp(v, min, max) {
 function smoother(t) {
   const x = clamp(t, 0, 1);
   return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+function doubleRAF(callback) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(callback);
+  });
+}
+
+function waitForWindowLoad() {
+  if (document.readyState === "complete") {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    window.addEventListener("load", resolve, { once: true });
+  });
 }
 
 /* =========================
@@ -275,7 +286,7 @@ function prepareFirstSlide() {
       firstImg.fetchPriority = "high";
     } catch (e) {}
     try {
-      firstImg.decoding = "async";
+      firstImg.decoding = "sync";
     } catch (e) {}
   }
 
@@ -482,187 +493,131 @@ slides.forEach((slide) => {
 });
 
 /* =========================
-   FIRST IMAGE PRIME
+   FIRST IMAGE WAIT
 ========================= */
 
-function setFirstImageReady() {
-  if (firstImageReady) return;
-  firstImageReady = true;
-  clearTimeout(firstImagePrimeTimer);
-}
-
-function primeActiveSlideImage() {
+async function waitForActiveSlideImage() {
   const activeSlide =
     slides[slideOrder[currentOrderIndex]] ||
     document.querySelector(".hero-slide.is-active");
 
   const img = activeSlide?.querySelector(".hero-main-image");
 
-  firstImageReady = false;
-  clearTimeout(firstImagePrimeTimer);
+  if (!img) return;
 
-  if (!img) {
-    setFirstImageReady();
-    return;
-  }
+  await new Promise((resolve) => {
+    let done = false;
 
-  try {
-    img.loading = "eager";
-  } catch (e) {}
-  try {
-    img.fetchPriority = "high";
-  } catch (e) {}
-  try {
-    img.decoding = "async";
-  } catch (e) {}
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
 
-  const done = () => {
-    setFirstImageReady();
-    requestAnimationFrame(() => {
-      updateArrowPositions();
-    });
-  };
+    const timeoutId = setTimeout(finish, 10000);
 
-  firstImagePrimeTimer = setTimeout(done, 2600);
+    const wrappedFinish = () => {
+      clearTimeout(timeoutId);
+      finish();
+    };
 
-  if (img.complete && img.naturalWidth > 0) {
-    if (typeof img.decode === "function") {
-      img.decode().catch(() => {}).finally(done);
-    } else {
-      done();
+    if (img.complete && img.naturalWidth > 0) {
+      if (typeof img.decode === "function") {
+        img.decode().catch(() => {}).finally(wrappedFinish);
+      } else {
+        wrappedFinish();
+      }
+      return;
     }
-    return;
-  }
 
-  img.addEventListener("load", done, { once: true });
-  img.addEventListener("error", done, { once: true });
+    img.addEventListener("load", wrappedFinish, { once: true });
+    img.addEventListener("error", wrappedFinish, { once: true });
+  });
+
+  await new Promise((resolve) => doubleRAF(resolve));
 }
 
 /* =========================
-   SMOOTH ARC LOADER
+   LOADER
 ========================= */
 
-function finishLoadingExperience() {
-  if (sliderReady) return;
-
-  clearTimeout(loaderFallbackTimer);
-  clearTimeout(firstImagePrimeTimer);
-
-  if (loadingScreen) {
-    loadingScreen.classList.add("is-hidden");
-  }
-
-  enableSliderTransitions();
-  sliderReady = true;
-  startSlideShow();
-  showSwipeHintBriefly();
-
-  requestAnimationFrame(() => {
-    updateArrowPositions();
-  });
-}
-
 function animateRingLoader(timestamp) {
-  if (!ringLoader || ringDots.length !== 8 || loaderFinished) return;
+  if (!ringLoader || ringDots.length !== 8) return;
 
   if (!loaderStart) loaderStart = timestamp;
 
-  const intro = 0.8;
-  const hold = 0.5;
-  const outro = 0.8;
-  const total = intro + hold + outro;
-  const holdEnd = intro + hold;
-
-  const baseElapsed = (timestamp - loaderStart) / 1000;
-
-  let renderElapsed;
-
-  if (!firstImageReady) {
-    loaderOutroStart = null;
-    renderElapsed = Math.min(baseElapsed, holdEnd - 0.001);
-  } else {
-    if (!loaderOutroStart) {
-      loaderOutroStart = timestamp;
-    }
-    renderElapsed = holdEnd + (timestamp - loaderOutroStart) / 1000;
-  }
+  const elapsed = (timestamp - loaderStart) / 1000;
 
   const baseSpeed = 0.56;
   const baseAngle =
-    baseElapsed * Math.PI * 2 * baseSpeed +
-    Math.sin(baseElapsed * 1.05) * 0.08 +
-    Math.sin(baseElapsed * 2.0 + 1.1) * 0.03;
+    elapsed * Math.PI * 2 * baseSpeed +
+    Math.sin(elapsed * 1.05) * 0.08 +
+    Math.sin(elapsed * 2.0 + 1.1) * 0.03;
 
   const radius = 22;
   const arcSpan = Math.PI * 1.28;
   const count = ringDots.length;
 
-  const outroElapsed = renderElapsed - holdEnd;
-
   ringDots.forEach((dot, i) => {
     const t = i / (count - 1);
-
     const angle = baseAngle - t * arcSpan;
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
 
     const scale = 1.06 - t * 0.34;
-
     const gray = Math.floor(18 + Math.pow(t, 1.4) * 205);
     const color = `rgb(${gray}, ${gray}, ${gray})`;
-
-    const baseOpacity = 0.96 - t * 0.56;
-
-    const introDelay = t * 1.5;
-    const introSpan = 0.5;
-    const introRaw = (renderElapsed - introDelay) / introSpan;
-    const introP = smoother(introRaw);
-
-    const outroDelay = t * 0.62;
-    const outroSpan = 0.52;
-    const outroP = 1 - smoother((outroElapsed - outroDelay) / outroSpan);
-
-    const opacity = baseOpacity * clamp(introP, 0, 1) * clamp(outroP, 0, 1);
+    const opacity = 0.96 - t * 0.56;
     const blur = 0.1 + t * 0.55;
 
+    const appear = smoother((elapsed - t * 0.18) / 0.45);
+
     dot.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-    dot.style.opacity = `${clamp(opacity, 0, 1)}`;
+    dot.style.opacity = `${clamp(opacity * clamp(appear, 0, 1), 0, 1)}`;
     dot.style.background = color;
     dot.style.filter = `blur(${blur}px)`;
   });
-
-  if (firstImageReady && renderElapsed >= total) {
-    loaderFinished = true;
-    finishLoadingExperience();
-    cancelAnimationFrame(loaderRAF);
-    return;
-  }
 
   loaderRAF = requestAnimationFrame(animateRingLoader);
 }
 
 function startRingLoader() {
-  if (!ringLoader) {
-    finishLoadingExperience();
-    return;
-  }
+  if (!ringLoader) return;
 
   cancelAnimationFrame(loaderRAF);
   loaderStart = null;
-  loaderFinished = false;
-  loaderOutroStart = null;
   loaderRAF = requestAnimationFrame(animateRingLoader);
 }
 
-function startLoaderFallback() {
-  clearTimeout(loaderFallbackTimer);
+function stopRingLoader() {
+  cancelAnimationFrame(loaderRAF);
+  loaderRAF = null;
+}
 
-  loaderFallbackTimer = setTimeout(() => {
-    setFirstImageReady();
-    if (!loaderRAF && !sliderReady) {
-      finishLoadingExperience();
+/* =========================
+   HOME BOOT
+========================= */
+
+async function bootHomeWhenReady() {
+  try {
+    await waitForWindowLoad();
+    await waitForActiveSlideImage();
+  } finally {
+    stopRingLoader();
+
+    if (loadingScreen && loadingScreen.parentNode) {
+      loadingScreen.parentNode.removeChild(loadingScreen);
     }
-  }, 5000);
+
+    enableSliderTransitions();
+    sliderReady = true;
+    startSlideShow();
+    showSwipeHintBriefly();
+
+    requestAnimationFrame(() => {
+      updateArrowPositions();
+    });
+  }
 }
 
 /* =========================
@@ -682,27 +637,25 @@ function initializePage() {
     prepareFirstSlide();
     setupMobileSwipe();
     updateArrowPositions();
-    primeActiveSlideImage();
-    startLoaderFallback();
     startRingLoader();
-  } else {
+    bootHomeWhenReady();
+    return;
+  }
+
+  doubleRAF(() => {
+    document.body.classList.add("is-loaded");
+  });
+
+  if (hero && slides.length) {
+    prepareFirstSlide();
+    setupMobileSwipe();
+    enableSliderTransitions();
+    sliderReady = true;
+    startSlideShow();
+
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        document.body.classList.add("is-loaded");
-      });
+      updateArrowPositions();
     });
-
-    if (hero && slides.length) {
-      prepareFirstSlide();
-      setupMobileSwipe();
-      enableSliderTransitions();
-      sliderReady = true;
-      startSlideShow();
-
-      requestAnimationFrame(() => {
-        updateArrowPositions();
-      });
-    }
   }
 
   setTimeout(() => {
