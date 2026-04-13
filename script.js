@@ -309,10 +309,13 @@ function prepareFirstSlide() {
 }
 
 function enableSliderTransitions() {
-  if (hero) {
-    hero.classList.add("is-initialized");
-    hero.classList.add("is-visible");
-  }
+  if (!hero) return;
+  hero.classList.add("is-initialized");
+}
+
+function showHeroSlider() {
+  if (!hero) return;
+  hero.classList.add("is-visible");
 }
 
 function goToNextSlide() {
@@ -707,10 +710,10 @@ async function bootHomeWhenReady() {
       }
     }
 
-    hero.classList.add("is-initialized");
+    enableSliderTransitions();
     void hero.offsetWidth;
     await new Promise((resolve) => doubleRAF(resolve));
-    hero.classList.add("is-visible");
+    showHeroSlider();
 
     sliderReady = true;
     startSlideShow();
