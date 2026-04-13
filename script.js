@@ -527,6 +527,13 @@ function waitForActiveSlideImage(callback) {
   img.addEventListener("error", onReady, { once: true });
 }
 
+function revealHomeBodyInstantly() {
+  document.body.style.transition = "none";
+  document.body.classList.add("is-loaded");
+  void document.body.offsetWidth;
+  document.body.style.transition = "";
+}
+
 /* =========================
    SMOOTH ARC LOADER
 ========================= */
@@ -538,9 +545,13 @@ function finishLoadingExperience() {
 
   const startExperience = () => {
     if (loadingScreen) {
+      revealHomeBodyInstantly();
+
       loadingScreen.style.transition =
-        "opacity 1.15s ease, visibility 1.15s ease";
+        "opacity 0.85s ease, visibility 0.85s ease";
       loadingScreen.classList.add("is-hidden");
+    } else {
+      document.body.classList.add("is-loaded");
     }
 
     enableSliderTransitions();
@@ -659,9 +670,7 @@ function initializePage() {
   if (pageInitialized) return;
   pageInitialized = true;
 
-  if (loadingScreen) {
-    document.body.classList.add("is-loaded");
-  } else {
+  if (!loadingScreen) {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         document.body.classList.add("is-loaded");
@@ -676,7 +685,7 @@ function initializePage() {
   if (loadingScreen) {
     startLoaderFallback();
     startRingLoader();
-  } else {
+  } else if (hero && slides.length) {
     finishLoadingExperience();
   }
 
