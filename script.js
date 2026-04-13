@@ -15,6 +15,7 @@ let loaderVisibleAt = null;
 let loaderIsFading = false;
 let loaderFadeStart = null;
 let loaderFadeResolve = null;
+
 let slideInterval = null;
 let hoverHandler = null;
 let sliderReady = false;
@@ -47,6 +48,10 @@ function doubleRAF(callback) {
   requestAnimationFrame(() => {
     requestAnimationFrame(callback);
   });
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function waitForWindowLoad() {
@@ -562,8 +567,8 @@ function animateRingLoader(timestamp) {
   const arcSpan = Math.PI * 1.28;
   const count = ringDots.length;
 
-  const fadeDelayPerDot = 0.055;
-  const fadeDuration = 0.28;
+  const fadeDelayPerDot = 0.085;
+  const fadeDuration = 0.24;
 
   ringDots.forEach((dot, i) => {
     const t = i / (count - 1);
@@ -574,7 +579,7 @@ function animateRingLoader(timestamp) {
     const scale = 1.06 - t * 0.34;
     const gray = Math.floor(18 + Math.pow(t, 1.4) * 205);
     const color = `rgb(${gray}, ${gray}, ${gray})`;
-    const opacity = 0.96 - t * 0.56;
+    const baseOpacity = 0.96 - t * 0.56;
     const blur = 0.1 + t * 0.55;
 
     const appear = smoother((elapsed - t * 0.18) / 0.45);
@@ -594,7 +599,7 @@ function animateRingLoader(timestamp) {
 
     dot.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
     dot.style.opacity = `${clamp(
-      opacity * clamp(appear, 0, 1) * fadeMultiplier,
+      baseOpacity * clamp(appear, 0, 1) * fadeMultiplier,
       0,
       1
     )}`;
@@ -603,7 +608,8 @@ function animateRingLoader(timestamp) {
   });
 
   if (loaderIsFading) {
-    const totalFadeTime = fadeDuration + fadeDelayPerDot * (count - 1) + 0.04;
+    const totalFadeTime =
+      fadeDuration + fadeDelayPerDot * (count - 1) + 0.04;
     const fadeElapsed = loaderFadeStart
       ? (timestamp - loaderFadeStart) / 1000
       : 0;
@@ -652,9 +658,14 @@ function startLoaderFadeOut() {
 
   if (loaderIsFading) {
     return new Promise((resolve) => {
+      if (!loaderFadeResolve) {
+        resolve();
+        return;
+      }
+
       const previousResolve = loaderFadeResolve;
       loaderFadeResolve = () => {
-        if (previousResolve) previousResolve();
+        previousResolve();
         resolve();
       };
     });
@@ -674,7 +685,17 @@ function startLoaderFadeOut() {
 
 async function bootHomeWhenReady() {
   try {
+    await waitForWindowLoad();
     await waitForActiveSlideImage();
+
+    const minLoaderMs = 1200;
+    const elapsed = loaderVisibleAt ? performance.now() - loaderVisibleAt : 0;
+    const remaining = Math.max(0, minLoaderMs - elapsed);
+
+    if (remaining > 0) {
+      await wait(remaining);
+    }
+
     await startLoaderFadeOut();
   } finally {
     enableSliderTransitions();
@@ -689,7 +710,7 @@ async function bootHomeWhenReady() {
     if (loadingScreen) {
       loadingScreen.classList.add("is-fading");
 
-      await new Promise((resolve) => setTimeout(resolve, 320));
+      await wait(280);
 
       if (loadingScreen.parentNode) {
         loadingScreen.parentNode.removeChild(loadingScreen);
