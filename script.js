@@ -12,6 +12,9 @@ const ringDots = document.querySelectorAll(".dot-ring-loader .ring-dot");
 let loaderRAF = null;
 let loaderStart = null;
 let loaderVisibleAt = null;
+let loaderIsFading = false;
+let loaderFadeStart = null;
+let loaderFadeResolve = null;
 let slideInterval = null;
 let hoverHandler = null;
 let sliderReady = false;
@@ -287,7 +290,7 @@ function prepareFirstSlide() {
       firstImg.fetchPriority = "high";
     } catch (e) {}
     try {
-      firstImg.decoding = "sync";
+      firstImg.decoding = "async";
     } catch (e) {}
   }
 
@@ -559,6 +562,9 @@ function animateRingLoader(timestamp) {
   const arcSpan = Math.PI * 1.28;
   const count = ringDots.length;
 
+  const fadeDelayPerDot = 0.055;
+  const fadeDuration = 0.28;
+
   ringDots.forEach((dot, i) => {
     const t = i / (count - 1);
     const angle = baseAngle - t * arcSpan;
@@ -573,11 +579,53 @@ function animateRingLoader(timestamp) {
 
     const appear = smoother((elapsed - t * 0.18) / 0.45);
 
+    let fadeMultiplier = 1;
+
+    if (loaderIsFading) {
+      if (!loaderFadeStart) loaderFadeStart = timestamp;
+
+      const fadeElapsed = (timestamp - loaderFadeStart) / 1000;
+      const fadeProgress = smoother(
+        (fadeElapsed - t * fadeDelayPerDot) / fadeDuration
+      );
+
+      fadeMultiplier = 1 - clamp(fadeProgress, 0, 1);
+    }
+
     dot.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-    dot.style.opacity = `${clamp(opacity * clamp(appear, 0, 1), 0, 1)}`;
+    dot.style.opacity = `${clamp(
+      opacity * clamp(appear, 0, 1) * fadeMultiplier,
+      0,
+      1
+    )}`;
     dot.style.background = color;
     dot.style.filter = `blur(${blur}px)`;
   });
+
+  if (loaderIsFading) {
+    const totalFadeTime = fadeDuration + fadeDelayPerDot * (count - 1) + 0.04;
+    const fadeElapsed = loaderFadeStart
+      ? (timestamp - loaderFadeStart) / 1000
+      : 0;
+
+    if (fadeElapsed >= totalFadeTime) {
+      ringDots.forEach((dot) => {
+        dot.style.opacity = "0";
+      });
+
+      cancelAnimationFrame(loaderRAF);
+      loaderRAF = null;
+      loaderIsFading = false;
+      loaderFadeStart = null;
+
+      if (loaderFadeResolve) {
+        const resolve = loaderFadeResolve;
+        loaderFadeResolve = null;
+        resolve();
+      }
+      return;
+    }
+  }
 
   loaderRAF = requestAnimationFrame(animateRingLoader);
 }
@@ -588,6 +636,9 @@ function startRingLoader() {
   cancelAnimationFrame(loaderRAF);
   loaderStart = null;
   loaderVisibleAt = performance.now();
+  loaderIsFading = false;
+  loaderFadeStart = null;
+  loaderFadeResolve = null;
   loaderRAF = requestAnimationFrame(animateRingLoader);
 }
 
@@ -596,17 +647,36 @@ function stopRingLoader() {
   loaderRAF = null;
 }
 
+function startLoaderFadeOut() {
+  if (!ringLoader) return Promise.resolve();
+
+  if (loaderIsFading) {
+    return new Promise((resolve) => {
+      const previousResolve = loaderFadeResolve;
+      loaderFadeResolve = () => {
+        if (previousResolve) previousResolve();
+        resolve();
+      };
+    });
+  }
+
+  loaderIsFading = true;
+  loaderFadeStart = null;
+
+  return new Promise((resolve) => {
+    loaderFadeResolve = resolve;
+  });
+}
+
 /* =========================
    HOME BOOT
 ========================= */
 
 async function bootHomeWhenReady() {
   try {
-    await waitForWindowLoad();
     await waitForActiveSlideImage();
+    await startLoaderFadeOut();
   } finally {
-    stopRingLoader();
-
     enableSliderTransitions();
     sliderReady = true;
     startSlideShow();
@@ -616,14 +686,10 @@ async function bootHomeWhenReady() {
       updateArrowPositions();
     });
 
-    if (ringLoader) {
-      ringLoader.classList.add("is-fading");
-    }
-
     if (loadingScreen) {
       loadingScreen.classList.add("is-fading");
 
-      await new Promise((resolve) => setTimeout(resolve, 560));
+      await new Promise((resolve) => setTimeout(resolve, 320));
 
       if (loadingScreen.parentNode) {
         loadingScreen.parentNode.removeChild(loadingScreen);
