@@ -595,7 +595,15 @@ function initializePage() {
   if (pageInitialized) return;
   pageInitialized = true;
 
-  document.body.classList.add("is-loaded");
+  if (loadingScreen) {
+    document.body.classList.add("is-loaded");
+  } else {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.body.classList.add("is-loaded");
+      });
+    });
+  }
 
   prepareFirstSlide();
   setupMobileSwipe();
