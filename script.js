@@ -15,6 +15,8 @@ let loaderFinished = false;
 let slideInterval = null;
 let hoverHandler = null;
 let sliderReady = false;
+let pageInitialized = false;
+let loaderFallbackTimer = null;
 
 /* swipe */
 let touchStartX = 0;
@@ -326,14 +328,14 @@ function showSwipeHintBriefly() {
   clearTimeout(swipeHintTimer);
 
   swipeHint.classList.remove("is-visible", "is-hidden");
-   
+
   /* いったんアニメーションを完全リセット */
   swipeHint.style.animation = "none";
-  void swipeHint.offsetWidth;   
-   
+  void swipeHint.offsetWidth;
+
   swipeHint.classList.add("is-visible");
 
-   /* JSから直接アニメーション指定して、CSS競合を回避 */
+  /* JSから直接アニメーション指定して、CSS競合を回避 */
   swipeHint.style.animation = "swipeHintOnlyFinal 1.2s ease-out 1";
 
   swipeHintTimer = setTimeout(() => {
@@ -473,6 +475,27 @@ slides.forEach((slide) => {
    SMOOTH ARC LOADER
 ========================= */
 
+function finishLoadingExperience() {
+  if (sliderReady) return;
+
+  clearTimeout(loaderFallbackTimer);
+
+  if (loadingScreen) {
+    loadingScreen.style.transition =
+      "opacity 1.15s ease, visibility 1.15s ease";
+    loadingScreen.classList.add("is-hidden");
+  }
+
+  enableSliderTransitions();
+  sliderReady = true;
+  startSlideShow();
+  showSwipeHintBriefly();
+
+  requestAnimationFrame(() => {
+    updateArrowPositions();
+  });
+}
+
 function animateRingLoader(timestamp) {
   if (!ringLoader || ringDots.length !== 8 || loaderFinished) return;
 
@@ -534,16 +557,7 @@ function animateRingLoader(timestamp) {
     loaderFinished = true;
 
     setTimeout(() => {
-      if (loadingScreen) {
-        loadingScreen.style.transition =
-          "opacity 1.15s ease, visibility 1.15s ease";
-        loadingScreen.classList.add("is-hidden");
-      }
-
-      enableSliderTransitions();
-      sliderReady = true;
-      startSlideShow();
-      showSwipeHintBriefly();
+      finishLoadingExperience();
     }, 180);
 
     cancelAnimationFrame(loaderRAF);
@@ -555,10 +569,7 @@ function animateRingLoader(timestamp) {
 
 function startRingLoader() {
   if (!ringLoader) {
-    enableSliderTransitions();
-    sliderReady = true;
-    startSlideShow();
-    showSwipeHintBriefly();
+    finishLoadingExperience();
     return;
   }
 
@@ -568,28 +579,46 @@ function startRingLoader() {
   loaderRAF = requestAnimationFrame(animateRingLoader);
 }
 
+function startLoaderFallback() {
+  clearTimeout(loaderFallbackTimer);
+
+  loaderFallbackTimer = setTimeout(() => {
+    finishLoadingExperience();
+  }, 3200);
+}
+
 /* =========================
-   WINDOW LOAD
+   INIT
 ========================= */
 
-window.addEventListener("load", () => {
+function initializePage() {
+  if (pageInitialized) return;
+  pageInitialized = true;
+
   document.body.classList.add("is-loaded");
 
   prepareFirstSlide();
   setupMobileSwipe();
-
-  if (loadingScreen) {
-    startRingLoader();
-  } else {
-    enableSliderTransitions();
-    sliderReady = true;
-    startSlideShow();
-    showSwipeHintBriefly();
-  }
-
   updateArrowPositions();
 
-   setTimeout(() => {
+  if (loadingScreen) {
+    startLoaderFallback();
+    startRingLoader();
+  } else {
+    finishLoadingExperience();
+  }
+
+  setTimeout(() => {
+    showSwipeHintBriefly();
+  }, 250);
+}
+
+document.addEventListener("DOMContentLoaded", initializePage);
+
+window.addEventListener("load", () => {
+  updateArrowPositions();
+
+  setTimeout(() => {
     showSwipeHintBriefly();
   }, 250);
 });
@@ -650,4 +679,3 @@ document.querySelectorAll(".menu-links a").forEach((link) => {
     link.classList.add("active");
   }
 });
-
