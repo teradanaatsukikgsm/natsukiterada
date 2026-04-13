@@ -12,11 +12,14 @@ const ringDots = document.querySelectorAll(".dot-ring-loader .ring-dot");
 let loaderRAF = null;
 let loaderStart = null;
 let loaderFinished = false;
+let loaderOutroStart = null;
 let slideInterval = null;
 let hoverHandler = null;
 let sliderReady = false;
 let pageInitialized = false;
 let loaderFallbackTimer = null;
+let firstImageReady = false;
+let firstImagePrimeTimer = null;
 
 /* swipe */
 let touchStartX = 0;
@@ -272,7 +275,7 @@ function prepareFirstSlide() {
       firstImg.fetchPriority = "high";
     } catch (e) {}
     try {
-      firstImg.decoding = "sync";
+      firstImg.decoding = "async";
     } catch (e) {}
   }
 
@@ -479,59 +482,60 @@ slides.forEach((slide) => {
 });
 
 /* =========================
-   FIRST IMAGE STABILIZE
+   FIRST IMAGE PRIME
 ========================= */
 
-function waitForActiveSlideImage(callback) {
+function setFirstImageReady() {
+  if (firstImageReady) return;
+  firstImageReady = true;
+  clearTimeout(firstImagePrimeTimer);
+}
+
+function primeActiveSlideImage() {
   const activeSlide =
     slides[slideOrder[currentOrderIndex]] ||
     document.querySelector(".hero-slide.is-active");
 
   const img = activeSlide?.querySelector(".hero-main-image");
 
+  firstImageReady = false;
+  clearTimeout(firstImagePrimeTimer);
+
   if (!img) {
-    callback();
+    setFirstImageReady();
     return;
   }
 
-  let doneCalled = false;
+  try {
+    img.loading = "eager";
+  } catch (e) {}
+  try {
+    img.fetchPriority = "high";
+  } catch (e) {}
+  try {
+    img.decoding = "async";
+  } catch (e) {}
 
   const done = () => {
-    if (doneCalled) return;
-    doneCalled = true;
-
+    setFirstImageReady();
     requestAnimationFrame(() => {
-      requestAnimationFrame(callback);
+      updateArrowPositions();
     });
   };
 
-  const fallback = setTimeout(() => {
-    done();
-  }, 1400);
+  firstImagePrimeTimer = setTimeout(done, 2600);
 
   if (img.complete && img.naturalWidth > 0) {
     if (typeof img.decode === "function") {
-      img
-        .decode()
-        .catch(() => {})
-        .finally(() => {
-          clearTimeout(fallback);
-          done();
-        });
+      img.decode().catch(() => {}).finally(done);
     } else {
-      clearTimeout(fallback);
       done();
     }
     return;
   }
 
-  const onReady = () => {
-    clearTimeout(fallback);
-    done();
-  };
-
-  img.addEventListener("load", onReady, { once: true });
-  img.addEventListener("error", onReady, { once: true });
+  img.addEventListener("load", done, { once: true });
+  img.addEventListener("error", done, { once: true });
 }
 
 /* =========================
@@ -542,30 +546,20 @@ function finishLoadingExperience() {
   if (sliderReady) return;
 
   clearTimeout(loaderFallbackTimer);
+  clearTimeout(firstImagePrimeTimer);
 
-  const startExperience = () => {
-    enableSliderTransitions();
-
-    requestAnimationFrame(() => {
-      if (loadingScreen) {
-        loadingScreen.classList.add("is-hidden");
-      }
-
-      sliderReady = true;
-      startSlideShow();
-      showSwipeHintBriefly();
-
-      requestAnimationFrame(() => {
-        updateArrowPositions();
-      });
-    });
-  };
-
-  if (hero && slides.length) {
-    waitForActiveSlideImage(startExperience);
-  } else {
-    startExperience();
+  if (loadingScreen) {
+    loadingScreen.classList.add("is-hidden");
   }
+
+  enableSliderTransitions();
+  sliderReady = true;
+  startSlideShow();
+  showSwipeHintBriefly();
+
+  requestAnimationFrame(() => {
+    updateArrowPositions();
+  });
 }
 
 function animateRingLoader(timestamp) {
@@ -573,25 +567,37 @@ function animateRingLoader(timestamp) {
 
   if (!loaderStart) loaderStart = timestamp;
 
-  const elapsed = (timestamp - loaderStart) / 1000;
-
   const intro = 0.8;
   const hold = 0.5;
   const outro = 0.8;
   const total = intro + hold + outro;
+  const holdEnd = intro + hold;
+
+  const baseElapsed = (timestamp - loaderStart) / 1000;
+
+  let renderElapsed;
+
+  if (!firstImageReady) {
+    loaderOutroStart = null;
+    renderElapsed = Math.min(baseElapsed, holdEnd - 0.001);
+  } else {
+    if (!loaderOutroStart) {
+      loaderOutroStart = timestamp;
+    }
+    renderElapsed = holdEnd + (timestamp - loaderOutroStart) / 1000;
+  }
 
   const baseSpeed = 0.56;
   const baseAngle =
-    elapsed * Math.PI * 2 * baseSpeed +
-    Math.sin(elapsed * 1.05) * 0.08 +
-    Math.sin(elapsed * 2.0 + 1.1) * 0.03;
+    baseElapsed * Math.PI * 2 * baseSpeed +
+    Math.sin(baseElapsed * 1.05) * 0.08 +
+    Math.sin(baseElapsed * 2.0 + 1.1) * 0.03;
 
   const radius = 22;
   const arcSpan = Math.PI * 1.28;
   const count = ringDots.length;
 
-  const outroStart = intro + hold;
-  const outroElapsed = elapsed - outroStart;
+  const outroElapsed = renderElapsed - holdEnd;
 
   ringDots.forEach((dot, i) => {
     const t = i / (count - 1);
@@ -609,7 +615,7 @@ function animateRingLoader(timestamp) {
 
     const introDelay = t * 1.5;
     const introSpan = 0.5;
-    const introRaw = (elapsed - introDelay) / introSpan;
+    const introRaw = (renderElapsed - introDelay) / introSpan;
     const introP = smoother(introRaw);
 
     const outroDelay = t * 0.62;
@@ -625,13 +631,9 @@ function animateRingLoader(timestamp) {
     dot.style.filter = `blur(${blur}px)`;
   });
 
-  if (elapsed >= total) {
+  if (firstImageReady && renderElapsed >= total) {
     loaderFinished = true;
-
-    setTimeout(() => {
-      finishLoadingExperience();
-    }, 180);
-
+    finishLoadingExperience();
     cancelAnimationFrame(loaderRAF);
     return;
   }
@@ -648,6 +650,7 @@ function startRingLoader() {
   cancelAnimationFrame(loaderRAF);
   loaderStart = null;
   loaderFinished = false;
+  loaderOutroStart = null;
   loaderRAF = requestAnimationFrame(animateRingLoader);
 }
 
@@ -655,8 +658,11 @@ function startLoaderFallback() {
   clearTimeout(loaderFallbackTimer);
 
   loaderFallbackTimer = setTimeout(() => {
-    finishLoadingExperience();
-  }, 3200);
+    setFirstImageReady();
+    if (!loaderRAF && !sliderReady) {
+      finishLoadingExperience();
+    }
+  }, 5000);
 }
 
 /* =========================
@@ -676,6 +682,7 @@ function initializePage() {
     prepareFirstSlide();
     setupMobileSwipe();
     updateArrowPositions();
+    primeActiveSlideImage();
     startLoaderFallback();
     startRingLoader();
   } else {
