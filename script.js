@@ -246,7 +246,6 @@ function updateSlides() {
   });
 }
 
-/* 最初の1枚目をローディング中に確定しておく */
 function prepareFirstSlide() {
   if (!slides.length) return;
 
@@ -264,6 +263,19 @@ function prepareFirstSlide() {
     activeSlide.classList.add("is-active");
   }
 
+  const firstImg = activeSlide?.querySelector(".hero-main-image");
+  if (firstImg) {
+    try {
+      firstImg.loading = "eager";
+    } catch (e) {}
+    try {
+      firstImg.fetchPriority = "high";
+    } catch (e) {}
+    try {
+      firstImg.decoding = "sync";
+    } catch (e) {}
+  }
+
   updateSlides();
 
   requestAnimationFrame(() => {
@@ -273,7 +285,6 @@ function prepareFirstSlide() {
   });
 }
 
-/* 通常アニメーションをここで有効化 */
 function enableSliderTransitions() {
   if (hero) {
     hero.classList.add("is-initialized");
@@ -328,7 +339,6 @@ function showSwipeHintBriefly() {
   clearTimeout(swipeHintTimer);
 
   swipeHint.classList.remove("is-visible", "is-hidden");
-
   swipeHint.style.animation = "none";
   void swipeHint.offsetWidth;
 
@@ -497,7 +507,7 @@ function waitForActiveSlideImage(callback) {
 
   const fallback = setTimeout(() => {
     done();
-  }, 1200);
+  }, 1400);
 
   if (img.complete && img.naturalWidth > 0) {
     if (typeof img.decode === "function") {
@@ -534,19 +544,20 @@ function finishLoadingExperience() {
   clearTimeout(loaderFallbackTimer);
 
   const startExperience = () => {
-    if (loadingScreen) {
-      loadingScreen.style.transition =
-        "opacity 0.85s ease, visibility 0.85s ease";
-      loadingScreen.classList.add("is-hidden");
-    }
-
     enableSliderTransitions();
-    sliderReady = true;
-    startSlideShow();
-    showSwipeHintBriefly();
 
     requestAnimationFrame(() => {
-      updateArrowPositions();
+      if (loadingScreen) {
+        loadingScreen.classList.add("is-hidden");
+      }
+
+      sliderReady = true;
+      startSlideShow();
+      showSwipeHintBriefly();
+
+      requestAnimationFrame(() => {
+        updateArrowPositions();
+      });
     });
   };
 
@@ -656,26 +667,35 @@ function initializePage() {
   if (pageInitialized) return;
   pageInitialized = true;
 
-  if (loadingScreen) {
+  const isHomeWithLoader = !!loadingScreen && !!hero && slides.length > 0;
+
+  if (isHomeWithLoader) {
+    document.body.classList.add("home-with-loader");
     document.body.classList.add("is-loaded");
-    loadingScreen.classList.remove("is-hidden");
+
+    prepareFirstSlide();
+    setupMobileSwipe();
+    updateArrowPositions();
+    startLoaderFallback();
+    startRingLoader();
   } else {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         document.body.classList.add("is-loaded");
       });
     });
-  }
 
-  prepareFirstSlide();
-  setupMobileSwipe();
-  updateArrowPositions();
+    if (hero && slides.length) {
+      prepareFirstSlide();
+      setupMobileSwipe();
+      enableSliderTransitions();
+      sliderReady = true;
+      startSlideShow();
 
-  if (loadingScreen) {
-    startLoaderFallback();
-    startRingLoader();
-  } else if (hero && slides.length) {
-    finishLoadingExperience();
+      requestAnimationFrame(() => {
+        updateArrowPositions();
+      });
+    }
   }
 
   setTimeout(() => {
