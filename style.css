@@ -791,6 +791,24 @@ body.home-with-loader {
     --hero-main-width: 76vw;
     --hero-main-height: 66vh;
   }
+  
+  .hero-image-wrapper {
+  width: auto;
+  height: auto;
+  max-width: 76vw;
+  max-height: none;
+}
+
+.hero-main-image {
+  width: auto;
+  height: auto;
+  max-width: 76vw;
+  max-height: 66vh;
+}
+
+.hero-caption {
+  margin-top: 10px;
+}
 
   .hero-preview-left-2 {
     left: 2%;
