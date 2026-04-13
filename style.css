@@ -560,10 +560,35 @@ body.home-with-loader {
   visibility: visible;
 }
 
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.55s ease;
+}
+
+.loading-screen.is-fading {
+  opacity: 0;
+}
+
 .dot-ring-loader {
   position: relative;
   width: 90px;
   height: 90px;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.dot-ring-loader.is-fading {
+  opacity: 0;
+  transform: scale(0.96);
 }
 
 .ring-dot {
