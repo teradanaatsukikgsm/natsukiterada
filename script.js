@@ -707,9 +707,11 @@ async function bootHomeWhenReady() {
       }
     }
 
+    hero.classList.add("is-initialized");
+    void hero.offsetWidth;
     await new Promise((resolve) => doubleRAF(resolve));
+    hero.classList.add("is-visible");
 
-    enableSliderTransitions();
     sliderReady = true;
     startSlideShow();
     showSwipeHintBriefly();
