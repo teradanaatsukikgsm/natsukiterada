@@ -604,20 +604,8 @@ async function bootHomeWhenReady() {
   try {
     await waitForWindowLoad();
     await waitForActiveSlideImage();
-
-    const minLoaderMs = 700;
-    const elapsed = loaderVisibleAt ? performance.now() - loaderVisibleAt : 0;
-    const remaining = Math.max(0, minLoaderMs - elapsed);
-
-    if (remaining > 0) {
-      await new Promise((resolve) => setTimeout(resolve, remaining));
-    }
   } finally {
     stopRingLoader();
-
-    if (loadingScreen && loadingScreen.parentNode) {
-      loadingScreen.parentNode.removeChild(loadingScreen);
-    }
 
     enableSliderTransitions();
     sliderReady = true;
@@ -627,6 +615,20 @@ async function bootHomeWhenReady() {
     requestAnimationFrame(() => {
       updateArrowPositions();
     });
+
+    if (ringLoader) {
+      ringLoader.classList.add("is-fading");
+    }
+
+    if (loadingScreen) {
+      loadingScreen.classList.add("is-fading");
+
+      await new Promise((resolve) => setTimeout(resolve, 560));
+
+      if (loadingScreen.parentNode) {
+        loadingScreen.parentNode.removeChild(loadingScreen);
+      }
+    }
   }
 }
 
