@@ -472,6 +472,62 @@ slides.forEach((slide) => {
 });
 
 /* =========================
+   FIRST IMAGE STABILIZE
+========================= */
+
+function waitForActiveSlideImage(callback) {
+  const activeSlide =
+    slides[slideOrder[currentOrderIndex]] ||
+    document.querySelector(".hero-slide.is-active");
+
+  const img = activeSlide?.querySelector(".hero-main-image");
+
+  if (!img) {
+    callback();
+    return;
+  }
+
+  let doneCalled = false;
+
+  const done = () => {
+    if (doneCalled) return;
+    doneCalled = true;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(callback);
+    });
+  };
+
+  const fallback = setTimeout(() => {
+    done();
+  }, 1200);
+
+  if (img.complete && img.naturalWidth > 0) {
+    if (typeof img.decode === "function") {
+      img
+        .decode()
+        .catch(() => {})
+        .finally(() => {
+          clearTimeout(fallback);
+          done();
+        });
+    } else {
+      clearTimeout(fallback);
+      done();
+    }
+    return;
+  }
+
+  const onReady = () => {
+    clearTimeout(fallback);
+    done();
+  };
+
+  img.addEventListener("load", onReady, { once: true });
+  img.addEventListener("error", onReady, { once: true });
+}
+
+/* =========================
    SMOOTH ARC LOADER
 ========================= */
 
@@ -480,20 +536,28 @@ function finishLoadingExperience() {
 
   clearTimeout(loaderFallbackTimer);
 
-  if (loadingScreen) {
-    loadingScreen.style.transition =
-      "opacity 1.15s ease, visibility 1.15s ease";
-    loadingScreen.classList.add("is-hidden");
+  const startExperience = () => {
+    if (loadingScreen) {
+      loadingScreen.style.transition =
+        "opacity 1.15s ease, visibility 1.15s ease";
+      loadingScreen.classList.add("is-hidden");
+    }
+
+    enableSliderTransitions();
+    sliderReady = true;
+    startSlideShow();
+    showSwipeHintBriefly();
+
+    requestAnimationFrame(() => {
+      updateArrowPositions();
+    });
+  };
+
+  if (hero && slides.length) {
+    waitForActiveSlideImage(startExperience);
+  } else {
+    startExperience();
   }
-
-  enableSliderTransitions();
-  sliderReady = true;
-  startSlideShow();
-  showSwipeHintBriefly();
-
-  requestAnimationFrame(() => {
-    updateArrowPositions();
-  });
 }
 
 function animateRingLoader(timestamp) {
