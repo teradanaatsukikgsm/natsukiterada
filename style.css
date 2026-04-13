@@ -142,12 +142,13 @@ body.home-with-loader {
 
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.8s ease;
+  transition: opacity 0.8s ease, visibility 0s linear 0.8s;
 }
 
 .hero-slider.is-visible {
   opacity: 1;
   visibility: visible;
+  transition: opacity 0.8s ease;
 }
 
 .hero-slide {
@@ -160,6 +161,7 @@ body.home-with-loader {
   opacity: 0;
   transition: opacity 1.8s ease;
   pointer-events: none;
+  will-change: opacity;
 }
 
 .hero-slider.is-initialized .hero-slide {
@@ -189,18 +191,24 @@ body.home-with-loader {
   max-width: var(--hero-main-width);
   max-height: var(--hero-main-height);
   flex: 0 0 auto;
+  overflow: hidden;
 }
 
 .hero-main-image {
   position: relative;
   z-index: 1;
   display: block;
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   margin: 0 auto;
   -webkit-user-drag: none;
   user-select: none;
+  image-rendering: auto;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .image-blocker {
@@ -542,7 +550,7 @@ body.home-with-loader {
   z-index: 10000;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.85s ease, visibility 0.85s ease;
+  transition: opacity 0.9s ease, visibility 0.9s ease;
 }
 
 .loading-screen.is-hidden {
@@ -627,7 +635,7 @@ body.home-with-loader {
 }
 
 /* =========================
-   SWIPE HINT ONLY FINAL
+   SWIPE HINT
 ========================= */
 
 @keyframes swipeHintOnlyFinal {
