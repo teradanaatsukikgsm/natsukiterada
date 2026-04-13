@@ -697,7 +697,16 @@ async function bootHomeWhenReady() {
     }
 
     await startLoaderFadeOut();
-  } finally {
+
+    if (loadingScreen) {
+      loadingScreen.classList.add("is-fading");
+      await wait(280);
+
+      if (loadingScreen.parentNode) {
+        loadingScreen.parentNode.removeChild(loadingScreen);
+      }
+    }
+
     enableSliderTransitions();
     sliderReady = true;
     startSlideShow();
@@ -706,16 +715,8 @@ async function bootHomeWhenReady() {
     requestAnimationFrame(() => {
       updateArrowPositions();
     });
-
-    if (loadingScreen) {
-      loadingScreen.classList.add("is-fading");
-
-      await wait(280);
-
-      if (loadingScreen.parentNode) {
-        loadingScreen.parentNode.removeChild(loadingScreen);
-      }
-    }
+  } finally {
+    // no-op
   }
 }
 
