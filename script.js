@@ -220,19 +220,9 @@ function setupHoverArea() {
   hero.addEventListener("mouseleave", hideArrows);
 }
 
-function clearSlideInlineStyles() {
-  slides.forEach((slide) => {
-    slide.style.transition = "";
-    slide.style.opacity = "";
-    slide.style.transform = "";
-    slide.style.animation = "";
-  });
-}
-
 function updateSlides() {
   if (!slides.length) return;
 
-  clearSlideInlineStyles();
   slides.forEach((slide) => slide.classList.remove("is-active"));
 
   const total = slides.length;
@@ -327,6 +317,9 @@ async function showHeroSlider() {
   if (!hero) return;
 
   enableSliderTransitions();
+
+  hero.style.visibility = "visible";
+  hero.style.opacity = "1";
   hero.classList.add("is-visible");
   hero.classList.remove("is-first-reveal");
 
@@ -339,22 +332,22 @@ async function showHeroSlider() {
 
   await new Promise((resolve) => {
     if (!activeSlide) {
+      hero.classList.remove("is-first-reveal");
       resolve();
       return;
     }
 
+    let finished = false;
+
     const finish = () => {
+      if (finished) return;
+      finished = true;
       hero.classList.remove("is-first-reveal");
-      activeSlide.removeEventListener("animationend", finish);
       resolve();
     };
 
     activeSlide.addEventListener("animationend", finish, { once: true });
-
-    setTimeout(() => {
-      hero.classList.remove("is-first-reveal");
-      resolve();
-    }, 1200);
+    setTimeout(finish, 1200);
   });
 }
 
@@ -778,6 +771,11 @@ function initializePage() {
     document.body.classList.add("home-with-loader");
     document.body.classList.add("is-loaded");
 
+    if (hero) {
+      hero.style.visibility = "hidden";
+      hero.style.opacity = "1";
+    }
+
     prepareFirstSlide();
     setupMobileSwipe();
     updateArrowPositions();
@@ -794,6 +792,8 @@ function initializePage() {
     prepareFirstSlide();
     setupMobileSwipe();
     enableSliderTransitions();
+    hero.style.visibility = "visible";
+    hero.style.opacity = "1";
     hero.classList.add("is-visible");
     sliderReady = true;
     startSlideShow();
