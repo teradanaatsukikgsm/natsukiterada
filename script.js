@@ -315,7 +315,11 @@ function enableSliderTransitions() {
 
 function showHeroSlider() {
   if (!hero) return;
+
   hero.classList.add("is-visible");
+  hero.classList.remove("is-fading-in");
+  void hero.offsetWidth;
+  hero.classList.add("is-fading-in");
 }
 
 function goToNextSlide() {
@@ -701,6 +705,8 @@ async function bootHomeWhenReady() {
 
     await startLoaderFadeOut();
 
+    enableSliderTransitions();
+
     if (loadingScreen) {
       loadingScreen.classList.add("is-fading");
       await wait(280);
@@ -710,9 +716,9 @@ async function bootHomeWhenReady() {
       }
     }
 
-    enableSliderTransitions();
-    void hero.offsetWidth;
     await new Promise((resolve) => doubleRAF(resolve));
+    await wait(40);
+
     showHeroSlider();
 
     sliderReady = true;
