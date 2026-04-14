@@ -885,3 +885,13 @@ body.home-with-loader {
   white-space: nowrap;
   border: 0;
 }
+
+.hero-caption {
+  margin-top: 8px;
+}
+
+@media (min-width: 1600px) {
+  .hero-caption {
+    margin-top: 10px;
+  }
+}
