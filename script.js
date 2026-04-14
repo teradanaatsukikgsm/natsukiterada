@@ -316,17 +316,26 @@ function enableSliderTransitions() {
 function showHeroSlider() {
   if (!hero) return;
 
+  const activeSlide = document.querySelector(".hero-slide.is-active");
+
   hero.classList.add("is-visible");
   hero.classList.add("is-initialized");
-
   hero.style.animation = "none";
-  hero.style.opacity = "0";
-  hero.style.transform = "translateY(10px)";
+  hero.style.opacity = "1";
+  hero.style.transform = "translateY(0)";
 
-  void hero.offsetWidth;
+  if (!activeSlide) return;
+
+  activeSlide.style.transition = "none";
+  activeSlide.style.opacity = "0";
+  activeSlide.style.transform = "translateY(10px)";
+
+  void activeSlide.offsetWidth;
 
   requestAnimationFrame(() => {
-    hero.style.animation = "heroSliderReveal 1.1s ease forwards";
+    activeSlide.style.transition = "opacity 0.95s ease, transform 0.95s ease";
+    activeSlide.style.opacity = "1";
+    activeSlide.style.transform = "translateY(0)";
   });
 }
 
