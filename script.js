@@ -317,9 +317,17 @@ function showHeroSlider() {
   if (!hero) return;
 
   hero.classList.add("is-visible");
-  hero.classList.remove("is-fading-in");
+  hero.classList.add("is-initialized");
+
+  hero.style.animation = "none";
+  hero.style.opacity = "0";
+  hero.style.transform = "translateY(10px)";
+
   void hero.offsetWidth;
-  hero.classList.add("is-fading-in");
+
+  requestAnimationFrame(() => {
+    hero.style.animation = "heroSliderReveal 1.1s ease forwards";
+  });
 }
 
 function goToNextSlide() {
@@ -705,11 +713,9 @@ async function bootHomeWhenReady() {
 
     await startLoaderFadeOut();
 
-    enableSliderTransitions();
-
     if (loadingScreen) {
       loadingScreen.classList.add("is-fading");
-      await wait(280);
+      await wait(560);
 
       if (loadingScreen.parentNode) {
         loadingScreen.parentNode.removeChild(loadingScreen);
@@ -717,7 +723,7 @@ async function bootHomeWhenReady() {
     }
 
     await new Promise((resolve) => doubleRAF(resolve));
-    await wait(40);
+    await wait(20);
 
     showHeroSlider();
 
