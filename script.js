@@ -318,14 +318,11 @@ async function showHeroSlider() {
 
   enableSliderTransitions();
 
-  hero.style.visibility = "visible";
-  hero.style.opacity = "1";
-  hero.classList.add("is-visible");
   hero.classList.remove("is-first-reveal");
-
   void hero.offsetWidth;
-  await new Promise((resolve) => doubleRAF(resolve));
 
+  hero.style.visibility = "visible";
+  hero.classList.add("is-visible");
   hero.classList.add("is-first-reveal");
 
   const activeSlide = document.querySelector(".hero-slide.is-active");
