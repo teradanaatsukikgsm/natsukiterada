@@ -336,6 +336,15 @@ function showHeroSlider() {
     activeSlide.style.transition = "opacity 0.95s ease, transform 0.95s ease";
     activeSlide.style.opacity = "1";
     activeSlide.style.transform = "translateY(0)";
+
+    const cleanup = () => {
+      activeSlide.style.transition = "";
+      activeSlide.style.opacity = "";
+      activeSlide.style.transform = "";
+      activeSlide.removeEventListener("transitionend", cleanup);
+    };
+
+    activeSlide.addEventListener("transitionend", cleanup, { once: true });
   });
 }
 
