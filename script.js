@@ -220,9 +220,19 @@ function setupHoverArea() {
   hero.addEventListener("mouseleave", hideArrows);
 }
 
+function clearSlideInlineStyles() {
+  slides.forEach((slide) => {
+    slide.style.transition = "";
+    slide.style.opacity = "";
+    slide.style.transform = "";
+    slide.style.animation = "";
+  });
+}
+
 function updateSlides() {
   if (!slides.length) return;
 
+  clearSlideInlineStyles();
   slides.forEach((slide) => slide.classList.remove("is-active"));
 
   const total = slides.length;
@@ -313,39 +323,18 @@ function enableSliderTransitions() {
   hero.classList.add("is-initialized");
 }
 
-function showHeroSlider() {
+async function showHeroSlider() {
   if (!hero) return;
 
-  const activeSlide = document.querySelector(".hero-slide.is-active");
+  enableSliderTransitions();
 
+  hero.classList.remove("is-first-reveal");
   hero.classList.add("is-visible");
-  hero.classList.add("is-initialized");
-  hero.style.animation = "none";
-  hero.style.opacity = "1";
-  hero.style.transform = "translateY(0)";
 
-  if (!activeSlide) return;
+  void hero.offsetWidth;
+  await new Promise((resolve) => doubleRAF(resolve));
 
-  activeSlide.style.transition = "none";
-  activeSlide.style.opacity = "0";
-  activeSlide.style.transform = "translateY(10px)";
-
-  void activeSlide.offsetWidth;
-
-  requestAnimationFrame(() => {
-    activeSlide.style.transition = "opacity 0.95s ease, transform 0.95s ease";
-    activeSlide.style.opacity = "1";
-    activeSlide.style.transform = "translateY(0)";
-
-    const cleanup = () => {
-      activeSlide.style.transition = "";
-      activeSlide.style.opacity = "";
-      activeSlide.style.transform = "";
-      activeSlide.removeEventListener("transitionend", cleanup);
-    };
-
-    activeSlide.addEventListener("transitionend", cleanup, { once: true });
-  });
+  hero.classList.add("is-first-reveal");
 }
 
 function goToNextSlide() {
@@ -740,10 +729,7 @@ async function bootHomeWhenReady() {
       }
     }
 
-    await new Promise((resolve) => doubleRAF(resolve));
-    await wait(20);
-
-    showHeroSlider();
+    await showHeroSlider();
 
     sliderReady = true;
     startSlideShow();
@@ -787,6 +773,7 @@ function initializePage() {
     prepareFirstSlide();
     setupMobileSwipe();
     enableSliderTransitions();
+    hero.classList.add("is-visible");
     sliderReady = true;
     startSlideShow();
 
