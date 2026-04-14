@@ -327,14 +327,35 @@ async function showHeroSlider() {
   if (!hero) return;
 
   enableSliderTransitions();
-
-  hero.classList.remove("is-first-reveal");
   hero.classList.add("is-visible");
+  hero.classList.remove("is-first-reveal");
 
   void hero.offsetWidth;
   await new Promise((resolve) => doubleRAF(resolve));
 
   hero.classList.add("is-first-reveal");
+
+  const activeSlide = document.querySelector(".hero-slide.is-active");
+
+  await new Promise((resolve) => {
+    if (!activeSlide) {
+      resolve();
+      return;
+    }
+
+    const finish = () => {
+      hero.classList.remove("is-first-reveal");
+      activeSlide.removeEventListener("animationend", finish);
+      resolve();
+    };
+
+    activeSlide.addEventListener("animationend", finish, { once: true });
+
+    setTimeout(() => {
+      hero.classList.remove("is-first-reveal");
+      resolve();
+    }, 1200);
+  });
 }
 
 function goToNextSlide() {
