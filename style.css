@@ -812,10 +812,7 @@ body.home-with-loader {
 }
 
 .hero-caption {
-  margin-top: 2px !important;
-  transform: translateY(-10px);
-  line-height: 1.2;
-  font-size: 12px;
+  margin-top: 8px;
 }
 
   .hero-preview-left-2 {
