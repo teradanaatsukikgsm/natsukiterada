@@ -21,6 +21,8 @@ let hoverHandler = null;
 let hoverLeaveBound = false;
 let activeImageLoadTarget = null;
 let activeImageLoadHandler = null;
+let transitionLock = false;
+const slideReadinessCache = new Map();
 let sliderReady = false;
 let pageInitialized = false;
 
@@ -204,6 +206,172 @@ function bindActiveImageLoadListener() {
   img.addEventListener("load", activeImageLoadHandler, { once: true });
 }
 
+function getWrappedOrderIndex(orderIndex) {
+  const total = slides.length;
+  return ((orderIndex % total) + total) % total;
+}
+
+function getSlideAssetElementsForOrder(orderIndex) {
+  if (!slides.length) return [];
+
+  const total = slides.length;
+  const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
+
+  const prevOrderIndex = (normalizedOrderIndex - 1 + total) % total;
+  const prev2OrderIndex = (normalizedOrderIndex - 2 + total) % total;
+  const nextOrderIndex = (normalizedOrderIndex + 1) % total;
+  const next2OrderIndex = (normalizedOrderIndex + 2) % total;
+
+  const activeIndex = slideOrder[normalizedOrderIndex];
+  const prevIndex = slideOrder[prevOrderIndex];
+  const prev2Index = slideOrder[prev2OrderIndex];
+  const nextIndex = slideOrder[nextOrderIndex];
+  const next2Index = slideOrder[next2OrderIndex];
+
+  const slide = slides[activeIndex];
+  if (!slide) return [];
+
+  const mainImg = slide.querySelector(".hero-main-image");
+  const left1 = slide.querySelector(".hero-preview-left-1");
+  const left2 = slide.querySelector(".hero-preview-left-2");
+  const right1 = slide.querySelector(".hero-preview-right-1");
+  const right2 = slide.querySelector(".hero-preview-right-2");
+
+  const prevImgSrc =
+    slides[prevIndex]?.querySelector(".hero-main-image")?.src || "";
+  const prev2ImgSrc =
+    slides[prev2Index]?.querySelector(".hero-main-image")?.src || "";
+  const nextImgSrc =
+    slides[nextIndex]?.querySelector(".hero-main-image")?.src || "";
+  const next2ImgSrc =
+    slides[next2Index]?.querySelector(".hero-main-image")?.src || "";
+
+  if (left1 && prevImgSrc && left1.getAttribute("src") !== prevImgSrc) {
+    left1.src = prevImgSrc;
+  }
+  if (left2 && prev2ImgSrc && left2.getAttribute("src") !== prev2ImgSrc) {
+    left2.src = prev2ImgSrc;
+  }
+  if (right1 && nextImgSrc && right1.getAttribute("src") !== nextImgSrc) {
+    right1.src = nextImgSrc;
+  }
+  if (right2 && next2ImgSrc && right2.getAttribute("src") !== next2ImgSrc) {
+    right2.src = next2ImgSrc;
+  }
+
+  return [mainImg, left1, left2, right1, right2].filter((img) => {
+    if (!img) return false;
+    const src = img.getAttribute("src") || img.src || "";
+    return !!src;
+  });
+}
+
+function waitForImageElement(img, timeoutMs = 10000) {
+  return new Promise((resolve) => {
+    let done = false;
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
+
+    const timeoutId = setTimeout(finish, timeoutMs);
+
+    const wrappedFinish = () => {
+      clearTimeout(timeoutId);
+      finish();
+    };
+
+    if (img.complete && img.naturalWidth > 0) {
+      if (typeof img.decode === "function") {
+        img.decode().catch(() => {}).finally(wrappedFinish);
+      } else {
+        wrappedFinish();
+      }
+      return;
+    }
+
+    img.addEventListener("load", wrappedFinish, { once: true });
+    img.addEventListener("error", wrappedFinish, { once: true });
+  });
+}
+
+function ensureSlideReady(orderIndex, options = {}) {
+  const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
+
+  if (slideReadinessCache.has(normalizedOrderIndex)) {
+    return slideReadinessCache.get(normalizedOrderIndex);
+  }
+
+  const promise = (async () => {
+    const images = getSlideAssetElementsForOrder(normalizedOrderIndex);
+    if (!images.length) return;
+
+    const mainTimeout = options.mainTimeout ?? 10000;
+    const sideTimeout = options.sideTimeout ?? 7000;
+
+    await Promise.all(
+      images.map((img, index) => {
+        if (index === 0) {
+          try {
+            img.fetchPriority = "high";
+          } catch (e) {}
+        }
+
+        try {
+          img.decoding = "async";
+        } catch (e) {}
+
+        return waitForImageElement(img, index === 0 ? mainTimeout : sideTimeout);
+      })
+    );
+
+    await new Promise((resolve) => doubleRAF(resolve));
+  })();
+
+  slideReadinessCache.set(normalizedOrderIndex, promise);
+  return promise;
+}
+
+function primeAdjacentSlides() {
+  if (!slides.length) return;
+
+  const nextOrderIndex = getWrappedOrderIndex(currentOrderIndex + 1);
+  const prevOrderIndex = getWrappedOrderIndex(currentOrderIndex - 1);
+
+  void ensureSlideReady(nextOrderIndex, {
+    mainTimeout: 8000,
+    sideTimeout: 5000,
+  });
+
+  void ensureSlideReady(prevOrderIndex, {
+    mainTimeout: 8000,
+    sideTimeout: 5000,
+  });
+}
+
+async function goToOrderIndex(targetOrderIndex) {
+  if (!slides.length || transitionLock) return;
+
+  transitionLock = true;
+
+  try {
+    const normalizedOrderIndex = getWrappedOrderIndex(targetOrderIndex);
+
+    await ensureSlideReady(normalizedOrderIndex, {
+      mainTimeout: 10000,
+      sideTimeout: 7000,
+    });
+
+    currentOrderIndex = normalizedOrderIndex;
+    updateSlides();
+    showArrows();
+  } finally {
+    transitionLock = false;
+  }
+}
+
 function setupHoverArea() {
   if (window.innerWidth <= 900) {
     hideArrows();
@@ -302,6 +470,8 @@ function updateSlides() {
   requestAnimationFrame(() => {
     updateArrowPositions();
   });
+
+  primeAdjacentSlides();
 }
 
 function prepareFirstSlide() {
@@ -394,18 +564,12 @@ async function showHeroSlider() {
   });
 }
 
-function goToNextSlide() {
-  if (!slides.length) return;
-  currentOrderIndex = (currentOrderIndex + 1) % slides.length;
-  updateSlides();
-  showArrows();
+async function goToNextSlide() {
+  await goToOrderIndex(currentOrderIndex + 1);
 }
 
-function goToPrevSlide() {
-  if (!slides.length) return;
-  currentOrderIndex = (currentOrderIndex - 1 + slides.length) % slides.length;
-  updateSlides();
-  showArrows();
+async function goToPrevSlide() {
+  await goToOrderIndex(currentOrderIndex - 1);
 }
 
 function startSlideShow() {
@@ -416,8 +580,8 @@ function startSlideShow() {
   function scheduleNext() {
     const delay = isFirst ? 6500 : 3800;
 
-    slideInterval = setTimeout(() => {
-      goToNextSlide();
+    slideInterval = setTimeout(async () => {
+      await goToNextSlide();
       isFirst = false;
       scheduleNext();
     }, delay);
@@ -460,9 +624,9 @@ function handleSwipe(deltaX) {
   swipeLocked = true;
 
   if (deltaX < 0) {
-    goToNextSlide();
+    void goToNextSlide();
   } else {
-    goToPrevSlide();
+    void goToPrevSlide();
   }
 
   resetSlideShow();
@@ -552,7 +716,7 @@ function setupMobileSwipe() {
 if (prevButton) {
   prevButton.addEventListener("click", () => {
     if (window.innerWidth <= 900) return;
-    goToPrevSlide();
+    void goToPrevSlide();
     resetSlideShow();
   });
 }
@@ -560,7 +724,7 @@ if (prevButton) {
 if (nextButton) {
   nextButton.addEventListener("click", () => {
     if (window.innerWidth <= 900) return;
-    goToNextSlide();
+    void goToNextSlide();
     resetSlideShow();
   });
 }
@@ -573,50 +737,15 @@ window.addEventListener("resize", () => {
   }
 });
 
-
 /* =========================
    FIRST IMAGE WAIT
 ========================= */
 
 async function waitForActiveSlideImage() {
-  const activeSlide =
-    slides[slideOrder[currentOrderIndex]] ||
-    document.querySelector(".hero-slide.is-active");
-
-  const img = activeSlide?.querySelector(".hero-main-image");
-
-  if (!img) return;
-
-  await new Promise((resolve) => {
-    let done = false;
-
-    const finish = () => {
-      if (done) return;
-      done = true;
-      resolve();
-    };
-
-    const timeoutId = setTimeout(finish, 10000);
-
-    const wrappedFinish = () => {
-      clearTimeout(timeoutId);
-      finish();
-    };
-
-    if (img.complete && img.naturalWidth > 0) {
-      if (typeof img.decode === "function") {
-        img.decode().catch(() => {}).finally(wrappedFinish);
-      } else {
-        wrappedFinish();
-      }
-      return;
-    }
-
-    img.addEventListener("load", wrappedFinish, { once: true });
-    img.addEventListener("error", wrappedFinish, { once: true });
+  await ensureSlideReady(currentOrderIndex, {
+    mainTimeout: 10000,
+    sideTimeout: 7000,
   });
-
-  await new Promise((resolve) => doubleRAF(resolve));
 }
 
 /* =========================
@@ -753,8 +882,10 @@ function startLoaderFadeOut() {
 
 async function bootHomeWhenReady() {
   try {
-    await waitForWindowLoad();
-    await waitForActiveSlideImage();
+    const firstViewReady = waitForActiveSlideImage();
+    void waitForWindowLoad();
+
+    await firstViewReady;
 
     const minLoaderMs = 1200;
     const elapsed = loaderVisibleAt ? performance.now() - loaderVisibleAt : 0;
@@ -799,37 +930,37 @@ function initializePage() {
 
   const isHomeWithLoader = !!loadingScreen && !!hero && slides.length > 0;
 
-if (isHomeWithLoader) {
-  document.body.classList.add("home-with-loader");
+  if (isHomeWithLoader) {
+    document.body.classList.add("home-with-loader");
 
-  if (hero) {
-    hero.style.visibility = "hidden";
+    if (hero) {
+      hero.style.visibility = "hidden";
+    }
+
+    prepareFirstSlide();
+    setupMobileSwipe();
+    startRingLoader();
+    bootHomeWhenReady();
+    return;
   }
-
-  prepareFirstSlide();
-  setupMobileSwipe();
-  startRingLoader();
-  bootHomeWhenReady();
-  return;
-}
 
   doubleRAF(() => {
     document.body.classList.add("is-loaded");
   });
 
   if (hero && slides.length) {
-  prepareFirstSlide();
-  setupMobileSwipe();
-  enableSliderTransitions();
-  hero.style.visibility = "visible";
-  hero.classList.add("is-visible");
-  sliderReady = true;
-  startSlideShow();
+    prepareFirstSlide();
+    setupMobileSwipe();
+    enableSliderTransitions();
+    hero.style.visibility = "visible";
+    hero.classList.add("is-visible");
+    sliderReady = true;
+    startSlideShow();
 
-  requestAnimationFrame(() => {
-    updateArrowPositions();
-  });
-}
+    requestAnimationFrame(() => {
+      updateArrowPositions();
+    });
+  }
 
   setTimeout(() => {
     showSwipeHintBriefly();
