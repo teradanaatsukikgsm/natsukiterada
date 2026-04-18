@@ -324,15 +324,19 @@ async function showHeroSlider() {
   enableSliderTransitions();
 
   hero.classList.remove("is-first-reveal");
-  hero.classList.add("is-visible");
-  hero.style.visibility = "visible";
+  hero.classList.remove("is-reveal-prep");
 
   const activeSlide = document.querySelector(".hero-slide.is-active");
+
+  hero.classList.add("is-reveal-prep");
+  hero.classList.add("is-visible");
+  hero.style.visibility = "visible";
 
   await new Promise((resolve) => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (!activeSlide) {
+          hero.classList.remove("is-reveal-prep");
           resolve();
           return;
         }
@@ -343,12 +347,14 @@ async function showHeroSlider() {
           if (finished) return;
           finished = true;
           hero.classList.remove("is-first-reveal");
+          hero.classList.remove("is-reveal-prep");
           resolve();
         };
 
         activeSlide.addEventListener("animationend", finish, { once: true });
 
         hero.classList.add("is-first-reveal");
+        hero.classList.remove("is-reveal-prep");
 
         setTimeout(finish, 1200);
       });
