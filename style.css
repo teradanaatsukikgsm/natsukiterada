@@ -223,8 +223,8 @@ body.home-with-loader {
   -webkit-user-drag: none;
   user-select: none;
   image-rendering: auto;
-  backface-visibility: visible;
-  transform: none;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .image-blocker {
