@@ -443,8 +443,6 @@ function updateSlides() {
   const activeSlide = slides[activeIndex];
   if (!activeSlide) return;
 
-  activeSlide.classList.add("is-active");
-
   const prevImgSrc =
     slides[prevIndex]?.querySelector(".hero-main-image")?.src || "";
   const prev2ImgSrc =
@@ -459,13 +457,22 @@ function updateSlides() {
   const right1 = activeSlide.querySelector(".hero-preview-right-1");
   const right2 = activeSlide.querySelector(".hero-preview-right-2");
 
-  if (left1) left1.src = prevImgSrc;
-  if (left2) left2.src = prev2ImgSrc;
-  if (right1) right1.src = nextImgSrc;
-  if (right2) right2.src = next2ImgSrc;
+  if (left1 && prevImgSrc && left1.getAttribute("src") !== prevImgSrc) {
+    left1.src = prevImgSrc;
+  }
+  if (left2 && prev2ImgSrc && left2.getAttribute("src") !== prev2ImgSrc) {
+    left2.src = prev2ImgSrc;
+  }
+  if (right1 && nextImgSrc && right1.getAttribute("src") !== nextImgSrc) {
+    right1.src = nextImgSrc;
+  }
+  if (right2 && next2ImgSrc && right2.getAttribute("src") !== next2ImgSrc) {
+    right2.src = next2ImgSrc;
+  }
+
+  activeSlide.classList.add("is-active");
 
   bindActiveImageLoadListener();
-
   setupHoverArea();
 
   requestAnimationFrame(() => {
@@ -474,7 +481,6 @@ function updateSlides() {
 
   primeAdjacentSlides();
 }
-
 function prepareFirstSlide() {
   if (!slides.length) return;
 
@@ -701,9 +707,9 @@ function setupMobileSwipe() {
       const deltaX = touchCurrentX - touchStartX;
       const deltaY = touchCurrentY - touchStartY;
 
-      if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        void handleSwipe(deltaX);
-      }
+     if (isDraggingSlider && Math.abs(deltaX) > Math.abs(deltaY)) {
+  void handleSwipe(deltaX);
+}
 
       isTouching = false;
       isDraggingSlider = false;
