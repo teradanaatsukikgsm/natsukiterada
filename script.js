@@ -697,11 +697,6 @@ function startRingLoader() {
   loaderRAF = requestAnimationFrame(animateRingLoader);
 }
 
-function stopRingLoader() {
-  cancelAnimationFrame(loaderRAF);
-  loaderRAF = null;
-}
-
 function startLoaderFadeOut() {
   if (!ringLoader) return Promise.resolve();
 
@@ -780,41 +775,37 @@ function initializePage() {
 
   const isHomeWithLoader = !!loadingScreen && !!hero && slides.length > 0;
 
-  if (isHomeWithLoader) {
-    document.body.classList.add("home-with-loader");
-    document.body.classList.add("is-loaded");
+if (isHomeWithLoader) {
+  document.body.classList.add("home-with-loader");
 
-    if (hero) {
-      hero.style.visibility = "hidden";
-      hero.style.opacity = "1";
-    }
-
-    prepareFirstSlide();
-    setupMobileSwipe();
-    updateArrowPositions();
-    startRingLoader();
-    bootHomeWhenReady();
-    return;
+  if (hero) {
+    hero.style.visibility = "hidden";
   }
+
+  prepareFirstSlide();
+  setupMobileSwipe();
+  startRingLoader();
+  bootHomeWhenReady();
+  return;
+}
 
   doubleRAF(() => {
     document.body.classList.add("is-loaded");
   });
 
   if (hero && slides.length) {
-    prepareFirstSlide();
-    setupMobileSwipe();
-    enableSliderTransitions();
-    hero.style.visibility = "visible";
-    hero.style.opacity = "1";
-    hero.classList.add("is-visible");
-    sliderReady = true;
-    startSlideShow();
+  prepareFirstSlide();
+  setupMobileSwipe();
+  enableSliderTransitions();
+  hero.style.visibility = "visible";
+  hero.classList.add("is-visible");
+  sliderReady = true;
+  startSlideShow();
 
-    requestAnimationFrame(() => {
-      updateArrowPositions();
-    });
-  }
+  requestAnimationFrame(() => {
+    updateArrowPositions();
+  });
+}
 
   setTimeout(() => {
     showSwipeHintBriefly();
@@ -822,14 +813,6 @@ function initializePage() {
 }
 
 document.addEventListener("DOMContentLoaded", initializePage);
-
-window.addEventListener("load", () => {
-  updateArrowPositions();
-
-  setTimeout(() => {
-    showSwipeHintBriefly();
-  }, 250);
-});
 
 window.addEventListener("pageshow", () => {
   setTimeout(() => {
