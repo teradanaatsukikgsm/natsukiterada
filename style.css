@@ -172,6 +172,10 @@ body.home-with-loader {
   pointer-events: auto;
 }
 
+.hero-slider.is-reveal-prep .hero-slide.is-active {
+  opacity: 0;
+}
+
 .hero-slider.is-first-reveal .hero-slide.is-active {
   opacity: 0;
   animation: firstPhotoReveal 0.95s ease forwards;
