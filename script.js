@@ -860,12 +860,6 @@ document.addEventListener("dragstart", (e) => {
   }
 });
 
-document.querySelectorAll("img").forEach((img) => {
-  img.addEventListener("mousedown", (e) => {
-    e.preventDefault();
-  });
-});
-
 document.querySelectorAll(".image-blocker").forEach((blocker) => {
   blocker.addEventListener("mousedown", (e) => {
     e.preventDefault();
