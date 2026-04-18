@@ -19,6 +19,8 @@ let loaderFadeResolve = null;
 let slideInterval = null;
 let hoverHandler = null;
 let hoverLeaveBound = false;
+let activeImageLoadTarget = null;
+let activeImageLoadHandler = null;
 let sliderReady = false;
 let pageInitialized = false;
 
@@ -176,6 +178,32 @@ function updateArrowPositions() {
   nextButton.style.left = "auto";
 }
 
+function bindActiveImageLoadListener() {
+  if (window.innerWidth <= 900) return;
+
+  if (activeImageLoadTarget && activeImageLoadHandler) {
+    activeImageLoadTarget.removeEventListener("load", activeImageLoadHandler);
+  }
+
+  const activeSlide = document.querySelector(".hero-slide.is-active");
+  const img = activeSlide?.querySelector(".hero-main-image");
+
+  if (!img) {
+    activeImageLoadTarget = null;
+    activeImageLoadHandler = null;
+    return;
+  }
+
+  activeImageLoadHandler = () => {
+    requestAnimationFrame(() => {
+      updateArrowPositions();
+    });
+  };
+
+  activeImageLoadTarget = img;
+  img.addEventListener("load", activeImageLoadHandler, { once: true });
+}
+
 function setupHoverArea() {
   if (window.innerWidth <= 900) {
     hideArrows();
@@ -266,6 +294,8 @@ function updateSlides() {
   if (left2) left2.src = prev2ImgSrc;
   if (right1) right1.src = nextImgSrc;
   if (right2) right2.src = next2ImgSrc;
+
+  bindActiveImageLoadListener();
 
   setupHoverArea();
 
@@ -543,12 +573,6 @@ window.addEventListener("resize", () => {
   }
 });
 
-slides.forEach((slide) => {
-  const img = slide.querySelector(".hero-main-image");
-  if (img) {
-    img.addEventListener("load", updateArrowPositions);
-  }
-});
 
 /* =========================
    FIRST IMAGE WAIT
