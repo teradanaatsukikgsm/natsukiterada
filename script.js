@@ -35,7 +35,6 @@ let isTouching = false;
 let isDraggingSlider = false;
 let swipeLocked = false;
 let swipeHintTimer = null;
-let mobilePreviewCleanupTimer = null;
 
 /* =========================
    LOADER UTILS
@@ -212,7 +211,9 @@ function getWrappedOrderIndex(orderIndex) {
   return ((orderIndex % total) + total) % total;
 }
 
-function getPreviewSourceSet(orderIndex) {
+function getSlideAssetElementsForOrder(orderIndex) {
+  if (!slides.length) return [];
+
   const total = slides.length;
   const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
 
@@ -221,95 +222,42 @@ function getPreviewSourceSet(orderIndex) {
   const nextOrderIndex = (normalizedOrderIndex + 1) % total;
   const next2OrderIndex = (normalizedOrderIndex + 2) % total;
 
+  const activeIndex = slideOrder[normalizedOrderIndex];
   const prevIndex = slideOrder[prevOrderIndex];
   const prev2Index = slideOrder[prev2OrderIndex];
   const nextIndex = slideOrder[nextOrderIndex];
   const next2Index = slideOrder[next2OrderIndex];
 
-  return {
-    prevImgSrc:
-      slides[prevIndex]?.querySelector(".hero-main-image")?.src || "",
-    prev2ImgSrc:
-      slides[prev2Index]?.querySelector(".hero-main-image")?.src || "",
-    nextImgSrc:
-      slides[nextIndex]?.querySelector(".hero-main-image")?.src || "",
-    next2ImgSrc:
-      slides[next2Index]?.querySelector(".hero-main-image")?.src || "",
-  };
-}
-
-function applyPreviewSourceSet(slide, sourceSet) {
-  if (!slide || !sourceSet) return;
-
-  const left1 = slide.querySelector(".hero-preview-left-1");
-  const left2 = slide.querySelector(".hero-preview-left-2");
-  const right1 = slide.querySelector(".hero-preview-right-1");
-  const right2 = slide.querySelector(".hero-preview-right-2");
-
-  if (
-    left1 &&
-    sourceSet.prevImgSrc &&
-    left1.getAttribute("src") !== sourceSet.prevImgSrc
-  ) {
-    left1.src = sourceSet.prevImgSrc;
-  }
-
-  if (
-    left2 &&
-    sourceSet.prev2ImgSrc &&
-    left2.getAttribute("src") !== sourceSet.prev2ImgSrc
-  ) {
-    left2.src = sourceSet.prev2ImgSrc;
-  }
-
-  if (
-    right1 &&
-    sourceSet.nextImgSrc &&
-    right1.getAttribute("src") !== sourceSet.nextImgSrc
-  ) {
-    right1.src = sourceSet.nextImgSrc;
-  }
-
-  if (
-    right2 &&
-    sourceSet.next2ImgSrc &&
-    right2.getAttribute("src") !== sourceSet.next2ImgSrc
-  ) {
-    right2.src = sourceSet.next2ImgSrc;
-  }
-}
-
-function clearPreviewSources(slide) {
-  if (!slide) return;
-
-  [
-    slide.querySelector(".hero-preview-left-1"),
-    slide.querySelector(".hero-preview-left-2"),
-    slide.querySelector(".hero-preview-right-1"),
-    slide.querySelector(".hero-preview-right-2"),
-  ].forEach((img) => {
-    if (!img) return;
-    img.removeAttribute("src");
-    img.removeAttribute("srcset");
-  });
-}
-
-function getSlideAssetElementsForOrder(orderIndex) {
-  if (!slides.length) return [];
-
-  const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
-  const activeIndex = slideOrder[normalizedOrderIndex];
   const slide = slides[activeIndex];
-
   if (!slide) return [];
-
-  applyPreviewSourceSet(slide, getPreviewSourceSet(normalizedOrderIndex));
 
   const mainImg = slide.querySelector(".hero-main-image");
   const left1 = slide.querySelector(".hero-preview-left-1");
   const left2 = slide.querySelector(".hero-preview-left-2");
   const right1 = slide.querySelector(".hero-preview-right-1");
   const right2 = slide.querySelector(".hero-preview-right-2");
+
+  const prevImgSrc =
+    slides[prevIndex]?.querySelector(".hero-main-image")?.src || "";
+  const prev2ImgSrc =
+    slides[prev2Index]?.querySelector(".hero-main-image")?.src || "";
+  const nextImgSrc =
+    slides[nextIndex]?.querySelector(".hero-main-image")?.src || "";
+  const next2ImgSrc =
+    slides[next2Index]?.querySelector(".hero-main-image")?.src || "";
+
+  if (left1 && prevImgSrc && left1.getAttribute("src") !== prevImgSrc) {
+    left1.src = prevImgSrc;
+  }
+  if (left2 && prev2ImgSrc && left2.getAttribute("src") !== prev2ImgSrc) {
+    left2.src = prev2ImgSrc;
+  }
+  if (right1 && nextImgSrc && right1.getAttribute("src") !== nextImgSrc) {
+    right1.src = nextImgSrc;
+  }
+  if (right2 && next2ImgSrc && right2.getAttribute("src") !== next2ImgSrc) {
+    right2.src = next2ImgSrc;
+  }
 
   return [mainImg, left1, left2, right1, right2].filter((img) => {
     if (!img) return false;
@@ -351,9 +299,8 @@ function waitForImageElement(img, timeoutMs = 10000) {
 
 function ensureSlideReady(orderIndex, options = {}) {
   const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
-  const useCache = window.innerWidth > 900;
 
-  if (useCache && slideReadinessCache.has(normalizedOrderIndex)) {
+  if (slideReadinessCache.has(normalizedOrderIndex)) {
     return slideReadinessCache.get(normalizedOrderIndex);
   }
 
@@ -383,17 +330,12 @@ function ensureSlideReady(orderIndex, options = {}) {
     await new Promise((resolve) => doubleRAF(resolve));
   })();
 
-  if (useCache) {
-    slideReadinessCache.set(normalizedOrderIndex, promise);
-  }
-
+  slideReadinessCache.set(normalizedOrderIndex, promise);
   return promise;
 }
 
 function primeAdjacentSlides() {
   if (!slides.length) return;
-
-  if (window.innerWidth <= 900) return;
 
   const nextOrderIndex = getWrappedOrderIndex(currentOrderIndex + 1);
   const prevOrderIndex = getWrappedOrderIndex(currentOrderIndex - 1);
@@ -485,24 +427,50 @@ function updateSlides() {
 
   slides.forEach((slide) => slide.classList.remove("is-active"));
 
+  const total = slides.length;
+
   const activeIndex = slideOrder[currentOrderIndex];
+  const prevOrderIndex = (currentOrderIndex - 1 + total) % total;
+  const prev2OrderIndex = (currentOrderIndex - 2 + total) % total;
+  const nextOrderIndex = (currentOrderIndex + 1) % total;
+  const next2OrderIndex = (currentOrderIndex + 2) % total;
+
+  const prevIndex = slideOrder[prevOrderIndex];
+  const prev2Index = slideOrder[prev2OrderIndex];
+  const nextIndex = slideOrder[nextOrderIndex];
+  const next2Index = slideOrder[next2OrderIndex];
+
   const activeSlide = slides[activeIndex];
   if (!activeSlide) return;
 
-  applyPreviewSourceSet(activeSlide, getPreviewSourceSet(currentOrderIndex));
-  activeSlide.classList.add("is-active");
+  const prevImgSrc =
+    slides[prevIndex]?.querySelector(".hero-main-image")?.src || "";
+  const prev2ImgSrc =
+    slides[prev2Index]?.querySelector(".hero-main-image")?.src || "";
+  const nextImgSrc =
+    slides[nextIndex]?.querySelector(".hero-main-image")?.src || "";
+  const next2ImgSrc =
+    slides[next2Index]?.querySelector(".hero-main-image")?.src || "";
 
-  if (window.innerWidth <= 900) {
-    clearTimeout(mobilePreviewCleanupTimer);
+  const left1 = activeSlide.querySelector(".hero-preview-left-1");
+  const left2 = activeSlide.querySelector(".hero-preview-left-2");
+  const right1 = activeSlide.querySelector(".hero-preview-right-1");
+  const right2 = activeSlide.querySelector(".hero-preview-right-2");
 
-    mobilePreviewCleanupTimer = setTimeout(() => {
-      slides.forEach((slide) => {
-        if (slide !== activeSlide) {
-          clearPreviewSources(slide);
-        }
-      });
-    }, 1900);
+  if (left1 && prevImgSrc && left1.getAttribute("src") !== prevImgSrc) {
+    left1.src = prevImgSrc;
   }
+  if (left2 && prev2ImgSrc && left2.getAttribute("src") !== prev2ImgSrc) {
+    left2.src = prev2ImgSrc;
+  }
+  if (right1 && nextImgSrc && right1.getAttribute("src") !== nextImgSrc) {
+    right1.src = nextImgSrc;
+  }
+  if (right2 && next2ImgSrc && right2.getAttribute("src") !== next2ImgSrc) {
+    right2.src = next2ImgSrc;
+  }
+
+  activeSlide.classList.add("is-active");
 
   bindActiveImageLoadListener();
   setupHoverArea();
@@ -954,18 +922,16 @@ async function bootHomeWhenReady() {
 
     await showHeroSlider();
 
-    if (window.innerWidth > 900) {
-      await Promise.all([
-        ensureSlideReady(currentOrderIndex + 1, {
-          mainTimeout: 10000,
-          sideTimeout: 7000,
-        }),
-        ensureSlideReady(currentOrderIndex - 1, {
-          mainTimeout: 10000,
-          sideTimeout: 7000,
-        }),
-      ]);
-    }
+    await Promise.all([
+      ensureSlideReady(currentOrderIndex + 1, {
+        mainTimeout: 10000,
+        sideTimeout: 7000,
+      }),
+      ensureSlideReady(currentOrderIndex - 1, {
+        mainTimeout: 10000,
+        sideTimeout: 7000,
+      }),
+    ]);
      
     sliderReady = true;
     startSlideShow();
