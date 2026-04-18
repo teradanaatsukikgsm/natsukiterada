@@ -618,22 +618,29 @@ function showSwipeHintBriefly() {
   }, 2200);
 }
 
-function handleSwipe(deltaX) {
-  if (!sliderReady || swipeLocked || Math.abs(deltaX) < 46) return;
-
-  swipeLocked = true;
-
-  if (deltaX < 0) {
-    void goToNextSlide();
-  } else {
-    void goToPrevSlide();
+async function handleSwipe(deltaX) {
+  if (!sliderReady || swipeLocked || transitionLock || Math.abs(deltaX) < 46) {
+    return;
   }
 
-  resetSlideShow();
+  swipeLocked = true;
+  clearTimeout(slideInterval);
 
-  setTimeout(() => {
+  try {
+    let moved = false;
+
+    if (deltaX < 0) {
+      moved = await goToNextSlide();
+    } else {
+      moved = await goToPrevSlide();
+    }
+
+    if (moved) {
+      resetSlideShow();
+    }
+  } finally {
     swipeLocked = false;
-  }, 450);
+  }
 }
 
 function setupMobileSwipe() {
@@ -694,7 +701,7 @@ function setupMobileSwipe() {
       const deltaY = touchCurrentY - touchStartY;
 
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        handleSwipe(deltaX);
+        void handleSwipe(deltaX);
       }
 
       isTouching = false;
