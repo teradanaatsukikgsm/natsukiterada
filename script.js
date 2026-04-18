@@ -18,6 +18,7 @@ let loaderFadeResolve = null;
 
 let slideInterval = null;
 let hoverHandler = null;
+let hoverLeaveBound = false;
 let sliderReady = false;
 let pageInitialized = false;
 
@@ -217,7 +218,11 @@ function setupHoverArea() {
   };
 
   hero.addEventListener("mousemove", hoverHandler);
-  hero.addEventListener("mouseleave", hideArrows);
+
+  if (!hoverLeaveBound) {
+    hero.addEventListener("mouseleave", hideArrows);
+    hoverLeaveBound = true;
+  }
 }
 
 function updateSlides() {
