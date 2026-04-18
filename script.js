@@ -358,7 +358,7 @@ async function showHeroSlider() {
         hero.classList.add("is-first-reveal");
         hero.classList.remove("is-reveal-prep");
 
-        setTimeout(finish, 1200);
+        setTimeout(finish, 1450);
       });
     });
   });
@@ -749,7 +749,7 @@ async function bootHomeWhenReady() {
 
     if (loadingScreen) {
       loadingScreen.classList.add("is-fading");
-      await wait(560);
+      await wait(300);
 
       if (loadingScreen.parentNode) {
         loadingScreen.parentNode.removeChild(loadingScreen);
