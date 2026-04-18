@@ -324,32 +324,35 @@ async function showHeroSlider() {
   enableSliderTransitions();
 
   hero.classList.remove("is-first-reveal");
-  void hero.offsetWidth;
-
-  hero.style.visibility = "visible";
   hero.classList.add("is-visible");
-  hero.classList.add("is-first-reveal");
+  hero.style.visibility = "visible";
 
   const activeSlide = document.querySelector(".hero-slide.is-active");
 
   await new Promise((resolve) => {
-    if (!activeSlide) {
-      hero.classList.remove("is-first-reveal");
-      resolve();
-      return;
-    }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!activeSlide) {
+          resolve();
+          return;
+        }
 
-    let finished = false;
+        let finished = false;
 
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      hero.classList.remove("is-first-reveal");
-      resolve();
-    };
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          hero.classList.remove("is-first-reveal");
+          resolve();
+        };
 
-    activeSlide.addEventListener("animationend", finish, { once: true });
-    setTimeout(finish, 1200);
+        activeSlide.addEventListener("animationend", finish, { once: true });
+
+        hero.classList.add("is-first-reveal");
+
+        setTimeout(finish, 1200);
+      });
+    });
   });
 }
 
