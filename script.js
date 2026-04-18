@@ -329,6 +329,8 @@ async function showHeroSlider() {
   const activeSlide = document.querySelector(".hero-slide.is-active");
 
   hero.classList.add("is-reveal-prep");
+  void hero.offsetWidth;
+
   hero.classList.add("is-visible");
   hero.style.visibility = "visible";
 
