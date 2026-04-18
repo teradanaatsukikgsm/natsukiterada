@@ -367,6 +367,7 @@ async function goToOrderIndex(targetOrderIndex) {
     currentOrderIndex = normalizedOrderIndex;
     updateSlides();
     showArrows();
+    return true;
   } finally {
     transitionLock = false;
   }
@@ -565,11 +566,11 @@ async function showHeroSlider() {
 }
 
 async function goToNextSlide() {
-  await goToOrderIndex(currentOrderIndex + 1);
+  return await goToOrderIndex(currentOrderIndex + 1);
 }
 
 async function goToPrevSlide() {
-  await goToOrderIndex(currentOrderIndex - 1);
+  return await goToOrderIndex(currentOrderIndex - 1);
 }
 
 function startSlideShow() {
@@ -915,6 +916,17 @@ async function bootHomeWhenReady() {
 
     await showHeroSlider();
 
+    await Promise.all([
+      ensureSlideReady(currentOrderIndex + 1, {
+        mainTimeout: 10000,
+        sideTimeout: 7000,
+      }),
+      ensureSlideReady(currentOrderIndex - 1, {
+        mainTimeout: 10000,
+        sideTimeout: 7000,
+      }),
+    ]);
+     
     sliderReady = true;
     startSlideShow();
     showSwipeHintBriefly();
