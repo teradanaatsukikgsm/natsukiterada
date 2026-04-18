@@ -156,7 +156,6 @@ body.home-with-loader {
   opacity: 0;
   transition: opacity 1.8s ease;
   pointer-events: none;
-  will-change: opacity, transform;
 }
 
 .hero-slider:not(.is-initialized) .hero-slide {
@@ -593,7 +592,6 @@ body.home-with-loader {
   border-radius: 999px;
   background: #111;
   opacity: 0;
-  will-change: transform, opacity, filter;
   transform: translate3d(0, 0, 0) scale(1);
   backface-visibility: hidden;
 }
