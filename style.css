@@ -184,7 +184,7 @@ body.home-with-loader {
 .hero-slider.is-first-reveal .hero-slide.is-active {
   transition: none !important;
   opacity: 0;
-  animation: firstPhotoReveal 0.95s ease forwards;
+  animation: firstPhotoReveal 1.2s ease forwards;
 }
 
 @keyframes firstPhotoReveal {
@@ -571,7 +571,7 @@ body.home-with-loader {
   z-index: 10000;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.55s ease;
+  transition: opacity 0.3s ease;
 }
 
 .loading-screen.is-fading {
