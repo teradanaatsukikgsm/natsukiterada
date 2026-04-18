@@ -782,15 +782,6 @@ body.home-with-loader {
     --hero-main-height: 66vh;
   }
 
-    .hero-slide {
-    transition: none !important;
-    z-index: 0;
-  }
-
-  .hero-slide.is-active {
-    z-index: 1;
-  }
-
   .hero-image-wrapper {
     width: auto;
     height: auto;
@@ -894,4 +885,3 @@ body.home-with-loader {
   white-space: nowrap;
   border: 0;
 }
-
