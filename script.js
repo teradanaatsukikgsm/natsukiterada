@@ -36,6 +36,7 @@ let isDraggingSlider = false;
 let swipeLocked = false;
 let swipeHintTimer = null;
 let swipeHintHasBeenShown = false;
+let swipeHintInteractionLocked = false;
 
 /* mobile-only runtime */
 let mobileDomRewritten = false;
@@ -970,6 +971,7 @@ function showSwipeHintBriefly() {
 
   clearTimeout(swipeHintTimer);
   swipeHintHasBeenShown = true;
+  swipeHintInteractionLocked = true;
 
   swipeHint.classList.remove("is-visible", "is-hidden");
   document.body.classList.remove("is-swipe-hint-focused");
@@ -981,6 +983,7 @@ function showSwipeHintBriefly() {
   swipeHint.style.animation = "swipeHintOnlyFinal 1.2s ease-out 1";
 
   swipeHintTimer = setTimeout(() => {
+    swipeHintInteractionLocked = false;
     document.body.classList.remove("is-swipe-hint-focused");
     swipeHint.style.animation = "none";
     swipeHint.classList.remove("is-visible");
@@ -992,6 +995,7 @@ function hideSwipeHintImmediately() {
   if (!swipeHint) return;
 
   clearTimeout(swipeHintTimer);
+  swipeHintInteractionLocked = false;
   document.body.classList.remove("is-swipe-hint-focused");
   swipeHint.style.animation = "none";
   swipeHint.classList.remove("is-visible");
@@ -1024,7 +1028,13 @@ async function handleSwipe(deltaX) {
 }
 
 async function handleSwipeMobile(deltaX) {
-  if (!sliderReady || swipeLocked || transitionLock || Math.abs(deltaX) < 46) {
+  if (
+    !sliderReady ||
+    swipeLocked ||
+    transitionLock ||
+    swipeHintInteractionLocked ||
+    Math.abs(deltaX) < 46
+  ) {
     return;
   }
 
@@ -1057,7 +1067,9 @@ function setupMobileSwipe() {
       if (window.innerWidth > 900) return;
       if (!e.touches || e.touches.length !== 1) return;
 
-      hideSwipeHintImmediately();
+      if (!swipeHintInteractionLocked) {
+        hideSwipeHintImmediately();
+      }
 
       const touch = e.touches[0];
       touchStartX = touch.clientX;
