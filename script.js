@@ -204,6 +204,55 @@ function rewriteHeroDomForMobile() {
   mobileDomRewritten = true;
 }
 
+function releaseImageToDataSrc(img) {
+  if (!img) return;
+  const src = img.getAttribute("src");
+  if (!src) return;
+
+  if (!img.dataset.src) {
+    img.dataset.src = src;
+  }
+
+  img.removeAttribute("src");
+}
+
+function cleanupMobileOffscreenAssets(activeOrderIndex) {
+  if (!slides.length) return;
+
+  const total = slides.length;
+  const normalized = getWrappedOrderIndex(activeOrderIndex);
+
+  const keepOrderIndexes = new Set([
+    normalized,
+    (normalized - 1 + total) % total,
+    (normalized + 1) % total,
+    (normalized - 2 + total) % total,
+    (normalized + 2) % total,
+  ]);
+
+  slides.forEach((slide, slideIndex) => {
+    const orderIndex = slideOrder.indexOf(slideIndex);
+    const mainImg = slide.querySelector(".hero-main-image");
+
+    const previews = [
+      slide.querySelector(".hero-preview-left-1"),
+      slide.querySelector(".hero-preview-left-2"),
+      slide.querySelector(".hero-preview-right-1"),
+      slide.querySelector(".hero-preview-right-2"),
+    ];
+
+    if (!keepOrderIndexes.has(orderIndex)) {
+      releaseImageToDataSrc(mainImg);
+    }
+
+    if (orderIndex !== normalized) {
+      previews.forEach((img) => {
+        if (img) img.removeAttribute("src");
+      });
+    }
+  });
+}
+
 function getMobileSlideAssetElementsForOrder(orderIndex) {
   if (!slides.length) return [];
 
@@ -249,6 +298,8 @@ function getMobileSlideAssetElementsForOrder(orderIndex) {
   if (right2 && next2ImgSrc && right2.getAttribute("src") !== next2ImgSrc) {
     right2.src = next2ImgSrc;
   }
+
+  cleanupMobileOffscreenAssets(normalizedOrderIndex);
 
   return [mainImg, left1, left2, right1, right2].filter((img) => {
     if (!img) return false;
@@ -304,6 +355,8 @@ function updateSlidesMobile() {
   }
 
   activeSlide.classList.add("is-active");
+
+  cleanupMobileOffscreenAssets(currentOrderIndex);
 
   requestAnimationFrame(() => {
     updateArrowPositions();
@@ -673,7 +726,7 @@ async function goToOrderIndexMobile(targetOrderIndex) {
 
     await ensureSlideReadyMobile(normalizedOrderIndex, {
       mainTimeout: 10000,
-      sideTimeout: 7000,
+      sideTimeout: 4500,
     });
 
     currentOrderIndex = normalizedOrderIndex;
@@ -1428,6 +1481,7 @@ async function bootMobileHomeWhenReady() {
     sliderReady = true;
     startSlideShowMobile();
     showSwipeHintBriefly();
+    cleanupMobileOffscreenAssets(currentOrderIndex);
 
     requestAnimationFrame(() => {
       updateArrowPositions();
