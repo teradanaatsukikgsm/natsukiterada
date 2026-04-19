@@ -35,6 +35,7 @@ let isTouching = false;
 let isDraggingSlider = false;
 let swipeLocked = false;
 let swipeHintTimer = null;
+let swipeHintHasBeenShown = false;
 
 /* mobile-only runtime */
 let mobileDomRewritten = false;
@@ -114,7 +115,7 @@ function findSlideIndexByFileName(fileName) {
     const img = slide.querySelector(".hero-main-image");
     if (!img) return false;
 
-    const src = img.getAttribute("src") || "";
+    const src = getImageSource(img);
     const actualFileName = src.split("/").pop();
 
     return actualFileName === fileName;
@@ -226,8 +227,6 @@ function cleanupMobileOffscreenAssets(activeOrderIndex) {
     normalized,
     (normalized - 1 + total) % total,
     (normalized + 1) % total,
-    (normalized - 2 + total) % total,
-    (normalized + 2) % total,
   ]);
 
   slides.forEach((slide, slideIndex) => {
@@ -256,52 +255,27 @@ function cleanupMobileOffscreenAssets(activeOrderIndex) {
 function getMobileSlideAssetElementsForOrder(orderIndex) {
   if (!slides.length) return [];
 
-  const total = slides.length;
   const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
-
-  const prevOrderIndex = (normalizedOrderIndex - 1 + total) % total;
-  const prev2OrderIndex = (normalizedOrderIndex - 2 + total) % total;
-  const nextOrderIndex = (normalizedOrderIndex + 1) % total;
-  const next2OrderIndex = (normalizedOrderIndex + 2) % total;
-
   const activeIndex = slideOrder[normalizedOrderIndex];
-  const prevIndex = slideOrder[prevOrderIndex];
-  const prev2Index = slideOrder[prev2OrderIndex];
-  const nextIndex = slideOrder[nextOrderIndex];
-  const next2Index = slideOrder[next2OrderIndex];
-
   const slide = slides[activeIndex];
   if (!slide) return [];
 
   const mainImg = slide.querySelector(".hero-main-image");
-  const left1 = slide.querySelector(".hero-preview-left-1");
-  const left2 = slide.querySelector(".hero-preview-left-2");
-  const right1 = slide.querySelector(".hero-preview-right-1");
-  const right2 = slide.querySelector(".hero-preview-right-2");
+  const previews = [
+    slide.querySelector(".hero-preview-left-1"),
+    slide.querySelector(".hero-preview-left-2"),
+    slide.querySelector(".hero-preview-right-1"),
+    slide.querySelector(".hero-preview-right-2"),
+  ];
 
   ensureImageSource(mainImg);
-
-  const prevImgSrc = getSlideMainSourceByIndex(prevIndex);
-  const prev2ImgSrc = getSlideMainSourceByIndex(prev2Index);
-  const nextImgSrc = getSlideMainSourceByIndex(nextIndex);
-  const next2ImgSrc = getSlideMainSourceByIndex(next2Index);
-
-  if (left1 && prevImgSrc && left1.getAttribute("src") !== prevImgSrc) {
-    left1.src = prevImgSrc;
-  }
-  if (left2 && prev2ImgSrc && left2.getAttribute("src") !== prev2ImgSrc) {
-    left2.src = prev2ImgSrc;
-  }
-  if (right1 && nextImgSrc && right1.getAttribute("src") !== nextImgSrc) {
-    right1.src = nextImgSrc;
-  }
-  if (right2 && next2ImgSrc && right2.getAttribute("src") !== next2ImgSrc) {
-    right2.src = next2ImgSrc;
-  }
+  previews.forEach((img) => {
+    if (img) img.removeAttribute("src");
+  });
 
   cleanupMobileOffscreenAssets(normalizedOrderIndex);
 
-  return [mainImg, left1, left2, right1, right2].filter((img) => {
+  return [mainImg].filter((img) => {
     if (!img) return false;
     const src = img.getAttribute("src") || img.src || "";
     return !!src;
@@ -317,42 +291,15 @@ function updateSlidesMobile() {
   const activeSlide = slides[activeIndex];
   if (!activeSlide) return;
 
-  const total = slides.length;
-
-  const prevOrderIndex = (currentOrderIndex - 1 + total) % total;
-  const prev2OrderIndex = (currentOrderIndex - 2 + total) % total;
-  const nextOrderIndex = (currentOrderIndex + 1) % total;
-  const next2OrderIndex = (currentOrderIndex + 2) % total;
-
-  const prevIndex = slideOrder[prevOrderIndex];
-  const prev2Index = slideOrder[prev2OrderIndex];
-  const nextIndex = slideOrder[nextOrderIndex];
-  const next2Index = slideOrder[next2OrderIndex];
-
   ensureSlideMainSourceByIndex(activeIndex);
-
-  const prevImgSrc = getSlideMainSourceByIndex(prevIndex);
-  const prev2ImgSrc = getSlideMainSourceByIndex(prev2Index);
-  const nextImgSrc = getSlideMainSourceByIndex(nextIndex);
-  const next2ImgSrc = getSlideMainSourceByIndex(next2Index);
-
-  const left1 = activeSlide.querySelector(".hero-preview-left-1");
-  const left2 = activeSlide.querySelector(".hero-preview-left-2");
-  const right1 = activeSlide.querySelector(".hero-preview-right-1");
-  const right2 = activeSlide.querySelector(".hero-preview-right-2");
-
-  if (left1 && prevImgSrc && left1.getAttribute("src") !== prevImgSrc) {
-    left1.src = prevImgSrc;
-  }
-  if (left2 && prev2ImgSrc && left2.getAttribute("src") !== prev2ImgSrc) {
-    left2.src = prev2ImgSrc;
-  }
-  if (right1 && nextImgSrc && right1.getAttribute("src") !== nextImgSrc) {
-    right1.src = nextImgSrc;
-  }
-  if (right2 && next2ImgSrc && right2.getAttribute("src") !== next2ImgSrc) {
-    right2.src = next2ImgSrc;
-  }
+  [
+    activeSlide.querySelector(".hero-preview-left-1"),
+    activeSlide.querySelector(".hero-preview-left-2"),
+    activeSlide.querySelector(".hero-preview-right-1"),
+    activeSlide.querySelector(".hero-preview-right-2"),
+  ].forEach((img) => {
+    if (img) img.removeAttribute("src");
+  });
 
   activeSlide.classList.add("is-active");
 
@@ -509,14 +456,12 @@ function getSlideAssetElementsForOrder(orderIndex) {
   const right1 = slide.querySelector(".hero-preview-right-1");
   const right2 = slide.querySelector(".hero-preview-right-2");
 
-  const prevImgSrc =
-    slides[prevIndex]?.querySelector(".hero-main-image")?.src || "";
-  const prev2ImgSrc =
-    slides[prev2Index]?.querySelector(".hero-main-image")?.src || "";
-  const nextImgSrc =
-    slides[nextIndex]?.querySelector(".hero-main-image")?.src || "";
-  const next2ImgSrc =
-    slides[next2Index]?.querySelector(".hero-main-image")?.src || "";
+  ensureImageSource(mainImg);
+
+  const prevImgSrc = ensureSlideMainSourceByIndex(prevIndex);
+  const prev2ImgSrc = ensureSlideMainSourceByIndex(prev2Index);
+  const nextImgSrc = ensureSlideMainSourceByIndex(nextIndex);
+  const next2ImgSrc = ensureSlideMainSourceByIndex(next2Index);
 
   if (left1 && prevImgSrc && left1.getAttribute("src") !== prevImgSrc) {
     left1.src = prevImgSrc;
@@ -602,6 +547,26 @@ function waitForImageElementMobile(img, timeoutMs = 10000) {
   });
 }
 
+async function ensureCurrentSlidePreviewAssets(orderIndex, options = {}) {
+  const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
+  const images = getSlideAssetElementsForOrder(normalizedOrderIndex);
+  const previewImages = images.slice(1);
+
+  if (!previewImages.length) {
+    return;
+  }
+
+  await Promise.all(
+    previewImages.map((img) => {
+      try {
+        img.decoding = "async";
+      } catch (e) {}
+
+      return waitForImageElement(img, options.sideTimeout ?? 7000);
+    })
+  );
+}
+
 function ensureSlideReady(orderIndex, options = {}) {
   const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
 
@@ -641,13 +606,7 @@ function ensureSlideReady(orderIndex, options = {}) {
 
 function ensureSlideReadyMobile(orderIndex, options = {}) {
   const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
-  const cacheKey = `m-${normalizedOrderIndex}`;
-
-  if (slideReadinessCache.has(cacheKey)) {
-    return slideReadinessCache.get(cacheKey);
-  }
-
-  const promise = (async () => {
+  return (async () => {
     const images = getMobileSlideAssetElementsForOrder(normalizedOrderIndex);
     if (!images.length) return;
 
@@ -672,9 +631,6 @@ function ensureSlideReadyMobile(orderIndex, options = {}) {
 
     await new Promise((resolve) => doubleRAF(resolve));
   })();
-
-  slideReadinessCache.set(cacheKey, promise);
-  return promise;
 }
 
 function primeAdjacentSlides() {
@@ -725,8 +681,8 @@ async function goToOrderIndexMobile(targetOrderIndex) {
     const normalizedOrderIndex = getWrappedOrderIndex(targetOrderIndex);
 
     await ensureSlideReadyMobile(normalizedOrderIndex, {
-      mainTimeout: 10000,
-      sideTimeout: 4500,
+      mainTimeout: 8000,
+      sideTimeout: 2500,
     });
 
     currentOrderIndex = normalizedOrderIndex;
@@ -865,6 +821,8 @@ function prepareFirstSlide() {
 
   const firstImg = activeSlide?.querySelector(".hero-main-image");
   if (firstImg) {
+    ensureImageSource(firstImg);
+
     try {
       firstImg.loading = "eager";
     } catch (e) {}
@@ -899,9 +857,14 @@ async function showHeroSlider() {
   hero.classList.remove("is-reveal-prep");
 
   const activeSlide = document.querySelector(".hero-slide.is-active");
+  const revealLeadInMs = 120;
 
   hero.classList.add("is-reveal-prep");
   void hero.offsetWidth;
+
+  if (revealLeadInMs > 0) {
+    await wait(revealLeadInMs);
+  }
 
   hero.classList.add("is-visible");
   hero.style.visibility = "visible";
@@ -976,7 +939,7 @@ function startSlideShowMobile() {
   let isFirst = true;
 
   function scheduleNext() {
-    const delay = isFirst ? 6500 : 3800;
+    const delay = isFirst ? 8000 : 4800;
 
     slideInterval = setTimeout(async () => {
       await goToNextSlideMobile();
@@ -1006,19 +969,33 @@ function showSwipeHintBriefly() {
   if (!swipeHint || window.innerWidth > 900) return;
 
   clearTimeout(swipeHintTimer);
+  swipeHintHasBeenShown = true;
 
   swipeHint.classList.remove("is-visible", "is-hidden");
+  document.body.classList.remove("is-swipe-hint-focused");
   swipeHint.style.animation = "none";
   void swipeHint.offsetWidth;
 
+  document.body.classList.add("is-swipe-hint-focused");
   swipeHint.classList.add("is-visible");
   swipeHint.style.animation = "swipeHintOnlyFinal 1.2s ease-out 1";
 
   swipeHintTimer = setTimeout(() => {
+    document.body.classList.remove("is-swipe-hint-focused");
     swipeHint.style.animation = "none";
     swipeHint.classList.remove("is-visible");
     swipeHint.classList.add("is-hidden");
   }, 2200);
+}
+
+function hideSwipeHintImmediately() {
+  if (!swipeHint) return;
+
+  clearTimeout(swipeHintTimer);
+  document.body.classList.remove("is-swipe-hint-focused");
+  swipeHint.style.animation = "none";
+  swipeHint.classList.remove("is-visible");
+  swipeHint.classList.add("is-hidden");
 }
 
 async function handleSwipe(deltaX) {
@@ -1079,6 +1056,8 @@ function setupMobileSwipe() {
     (e) => {
       if (window.innerWidth > 900) return;
       if (!e.touches || e.touches.length !== 1) return;
+
+      hideSwipeHintImmediately();
 
       const touch = e.touches[0];
       touchStartX = touch.clientX;
@@ -1254,10 +1233,21 @@ window.addEventListener("resize", () => {
 ========================= */
 
 async function waitForActiveSlideImage() {
-  await ensureSlideReady(currentOrderIndex, {
-    mainTimeout: 10000,
-    sideTimeout: 7000,
-  });
+  const activeIndex = slideOrder[currentOrderIndex];
+  const activeSlide = slides[activeIndex];
+  const mainImg = activeSlide?.querySelector(".hero-main-image");
+
+  if (!mainImg) return;
+
+  try {
+    mainImg.fetchPriority = "high";
+  } catch (e) {}
+
+  try {
+    mainImg.decoding = "async";
+  } catch (e) {}
+
+  await waitForImageElement(mainImg, 10000);
 }
 
 async function waitForActiveSlideImageMobile() {
@@ -1278,18 +1268,18 @@ function animateRingLoader(timestamp) {
 
   const elapsed = (timestamp - loaderStart) / 1000;
 
-  const baseSpeed = 0.56;
+  const baseSpeed = 0.52;
   const baseAngle =
     elapsed * Math.PI * 2 * baseSpeed +
-    Math.sin(elapsed * 1.05) * 0.08 +
-    Math.sin(elapsed * 2.0 + 1.1) * 0.03;
+    Math.sin(elapsed * 0.92) * 0.1 +
+    Math.sin(elapsed * 1.62 + 1.1) * 0.02;
 
   const radius = 22;
   const arcSpan = Math.PI * 1.28;
   const count = ringDots.length;
 
-  const fadeDelayPerDot = 0.085;
-  const fadeDuration = 0.24;
+  const fadeDelayPerDot = 0.11;
+  const fadeDuration = 0.3;
 
   ringDots.forEach((dot, i) => {
     const t = i / (count - 1);
@@ -1297,11 +1287,11 @@ function animateRingLoader(timestamp) {
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
 
-    const scale = 1.06 - t * 0.34;
+    const scale = 1.04 - t * 0.3;
     const gray = Math.floor(18 + Math.pow(t, 1.4) * 205);
     const color = `rgb(${gray}, ${gray}, ${gray})`;
     const baseOpacity = 0.96 - t * 0.56;
-    const blur = 0.1 + t * 0.55;
+    const blur = 0.08 + t * 0.48;
 
     const appear = smoother((elapsed - t * 0.18) / 0.45);
 
@@ -1311,8 +1301,9 @@ function animateRingLoader(timestamp) {
       if (!loaderFadeStart) loaderFadeStart = timestamp;
 
       const fadeElapsed = (timestamp - loaderFadeStart) / 1000;
+      const fadeOrder = t;
       const fadeProgress = smoother(
-        (fadeElapsed - t * fadeDelayPerDot) / fadeDuration
+        (fadeElapsed - fadeOrder * fadeDelayPerDot) / fadeDuration
       );
 
       fadeMultiplier = 1 - clamp(fadeProgress, 0, 1);
@@ -1401,7 +1392,12 @@ function startLoaderFadeOut() {
 
 async function bootHomeWhenReady() {
   try {
-    const firstViewReady = waitForActiveSlideImage();
+    const firstViewReady = Promise.all([
+      waitForActiveSlideImage(),
+      ensureCurrentSlidePreviewAssets(currentOrderIndex, {
+        sideTimeout: 7000,
+      }),
+    ]);
     void waitForWindowLoad();
 
     await firstViewReady;
@@ -1427,7 +1423,7 @@ async function bootHomeWhenReady() {
 
     await showHeroSlider();
 
-    await Promise.all([
+    void Promise.all([
       ensureSlideReady(currentOrderIndex + 1, {
         mainTimeout: 10000,
         sideTimeout: 7000,
@@ -1563,7 +1559,8 @@ function initializePage() {
 
 document.addEventListener("DOMContentLoaded", initializePage);
 
-window.addEventListener("pageshow", () => {
+window.addEventListener("pageshow", (event) => {
+  if (!event.persisted || swipeHintHasBeenShown) return;
   setTimeout(() => {
     showSwipeHintBriefly();
   }, 250);

@@ -270,14 +270,14 @@ body.home-with-loader {
 .hero-preview-left-2 {
   left: 7%;
   height: 42vh;
-  opacity: 0.06;
+  opacity: 0.04;
   z-index: 0;
 }
 
 .hero-preview-right-2 {
   right: 7%;
   height: 42vh;
-  opacity: 0.06;
+  opacity: 0.04;
   z-index: 0;
 }
 
@@ -318,7 +318,7 @@ body.home-with-loader {
   display: block;
   height: 54vh;
   width: auto;
-  opacity: 0.12;
+  opacity: 0.09;
   z-index: 1;
 }
 
@@ -679,18 +679,34 @@ body.home-with-loader {
 .swipe-hint {
   position: absolute;
   left: 50%;
-  bottom: 64px;
+  bottom: 70px;
   transform: translateX(-50%) translateY(-2px);
   z-index: 999;
   font-size: 13px;
   font-style: italic;
   letter-spacing: 0.1em;
-  color: rgba(17, 17, 17, 0.42);
+  color: rgba(17, 17, 17, 0.52);
   opacity: 0;
   pointer-events: none;
   white-space: nowrap;
   transition: opacity 0.45s ease, transform 0.45s ease;
   will-change: transform, opacity;
+}
+
+.site-header,
+.site-footer,
+.hero-slide.is-active .hero-image-wrapper,
+.hero-slide.is-active .hero-caption {
+  transition: opacity 0.42s ease, filter 0.42s ease;
+}
+
+body.is-swipe-hint-focused .hero-slide.is-active .hero-image-wrapper {
+  opacity: 0.48;
+  filter: grayscale(22%) brightness(0.86);
+}
+
+body.is-swipe-hint-focused .hero-slide.is-active .hero-caption {
+  opacity: 0.22;
 }
 
 .swipe-hint::before,
@@ -801,13 +817,16 @@ body.home-with-loader {
   }
 
   .hero-preview-left-2 {
-    left: 2%;
-    height: 28vh;
+    display: none;
   }
 
   .hero-preview-right-2 {
-    right: 2%;
-    height: 28vh;
+    display: none;
+  }
+
+  .hero-preview-frame-left-1,
+  .hero-preview-frame-right-1 {
+    display: none;
   }
 
   .hero-preview-frame-left-1 {
@@ -826,6 +845,7 @@ body.home-with-loader {
     display: none !important;
     pointer-events: none !important;
   }
+
 }
 
 
@@ -842,13 +862,13 @@ body.home-with-loader {
   .hero-preview-left-2 {
     left: 10%;
     height: 34vh;
-    opacity: 0.05;
+    opacity: 0.04;
   }
 
   .hero-preview-right-2 {
     right: 10%;
     height: 34vh;
-    opacity: 0.05;
+    opacity: 0.04;
   }
 
   .hero-preview-frame-left-1 {
@@ -861,7 +881,7 @@ body.home-with-loader {
 
   .hero-preview-frame .hero-preview {
     height: 46vh;
-    opacity: 0.1;
+    opacity: 0.09;
   }
 
   .bio-clients {
