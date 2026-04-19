@@ -36,6 +36,9 @@ let isDraggingSlider = false;
 let swipeLocked = false;
 let swipeHintTimer = null;
 
+/* mobile-only runtime */
+let mobileDomRewritten = false;
+
 /* =========================
    LOADER UTILS
 ========================= */
@@ -131,6 +134,222 @@ if (fixedStartIndex !== -1) {
 }
 
 let currentOrderIndex = 0;
+
+/* =========================
+   MOBILE DOM REWRITE HELPERS
+========================= */
+
+function isMobileViewport() {
+  return window.innerWidth <= 900;
+}
+
+function getMainImage(slide) {
+  return slide?.querySelector(".hero-main-image") || null;
+}
+
+function getImageSource(img) {
+  if (!img) return "";
+  return img.getAttribute("src") || img.dataset.src || img.src || "";
+}
+
+function ensureImageSource(img) {
+  if (!img) return "";
+  const currentSrc = img.getAttribute("src");
+  if (!currentSrc && img.dataset.src) {
+    img.setAttribute("src", img.dataset.src);
+  }
+  return img.getAttribute("src") || img.src || "";
+}
+
+function ensureSlideMainSourceByIndex(index) {
+  const img = getMainImage(slides[index]);
+  return ensureImageSource(img);
+}
+
+function getSlideMainSourceByIndex(index) {
+  const img = getMainImage(slides[index]);
+  return getImageSource(img);
+}
+
+function rewriteHeroDomForMobile() {
+  if (mobileDomRewritten || !slides.length) return;
+
+  const keepIndex = slideOrder[0];
+
+  slides.forEach((slide, index) => {
+    const img = getMainImage(slide);
+    if (!img) return;
+
+    const src = img.getAttribute("src");
+    if (!src) return;
+
+    if (index === keepIndex) {
+      try {
+        img.loading = "eager";
+      } catch (e) {}
+      try {
+        img.fetchPriority = "high";
+      } catch (e) {}
+      try {
+        img.decoding = "async";
+      } catch (e) {}
+      return;
+    }
+
+    img.dataset.src = src;
+    img.removeAttribute("src");
+  });
+
+  slideReadinessCache.clear();
+  mobileDomRewritten = true;
+}
+
+function getMobileSlideAssetElementsForOrder(orderIndex) {
+  if (!slides.length) return [];
+
+  const total = slides.length;
+  const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
+
+  const prevOrderIndex = (normalizedOrderIndex - 1 + total) % total;
+  const prev2OrderIndex = (normalizedOrderIndex - 2 + total) % total;
+  const nextOrderIndex = (normalizedOrderIndex + 1) % total;
+  const next2OrderIndex = (normalizedOrderIndex + 2) % total;
+
+  const activeIndex = slideOrder[normalizedOrderIndex];
+  const prevIndex = slideOrder[prevOrderIndex];
+  const prev2Index = slideOrder[prev2OrderIndex];
+  const nextIndex = slideOrder[nextOrderIndex];
+  const next2Index = slideOrder[next2OrderIndex];
+
+  const slide = slides[activeIndex];
+  if (!slide) return [];
+
+  const mainImg = slide.querySelector(".hero-main-image");
+  const left1 = slide.querySelector(".hero-preview-left-1");
+  const left2 = slide.querySelector(".hero-preview-left-2");
+  const right1 = slide.querySelector(".hero-preview-right-1");
+  const right2 = slide.querySelector(".hero-preview-right-2");
+
+  ensureImageSource(mainImg);
+
+  const prevImgSrc = getSlideMainSourceByIndex(prevIndex);
+  const prev2ImgSrc = getSlideMainSourceByIndex(prev2Index);
+  const nextImgSrc = getSlideMainSourceByIndex(nextIndex);
+  const next2ImgSrc = getSlideMainSourceByIndex(next2Index);
+
+  if (left1 && prevImgSrc && left1.getAttribute("src") !== prevImgSrc) {
+    left1.src = prevImgSrc;
+  }
+  if (left2 && prev2ImgSrc && left2.getAttribute("src") !== prev2ImgSrc) {
+    left2.src = prev2ImgSrc;
+  }
+  if (right1 && nextImgSrc && right1.getAttribute("src") !== nextImgSrc) {
+    right1.src = nextImgSrc;
+  }
+  if (right2 && next2ImgSrc && right2.getAttribute("src") !== next2ImgSrc) {
+    right2.src = next2ImgSrc;
+  }
+
+  return [mainImg, left1, left2, right1, right2].filter((img) => {
+    if (!img) return false;
+    const src = img.getAttribute("src") || img.src || "";
+    return !!src;
+  });
+}
+
+function updateSlidesMobile() {
+  if (!slides.length) return;
+
+  slides.forEach((slide) => slide.classList.remove("is-active"));
+
+  const activeIndex = slideOrder[currentOrderIndex];
+  const activeSlide = slides[activeIndex];
+  if (!activeSlide) return;
+
+  const total = slides.length;
+
+  const prevOrderIndex = (currentOrderIndex - 1 + total) % total;
+  const prev2OrderIndex = (currentOrderIndex - 2 + total) % total;
+  const nextOrderIndex = (currentOrderIndex + 1) % total;
+  const next2OrderIndex = (currentOrderIndex + 2) % total;
+
+  const prevIndex = slideOrder[prevOrderIndex];
+  const prev2Index = slideOrder[prev2OrderIndex];
+  const nextIndex = slideOrder[nextOrderIndex];
+  const next2Index = slideOrder[next2OrderIndex];
+
+  ensureSlideMainSourceByIndex(activeIndex);
+
+  const prevImgSrc = getSlideMainSourceByIndex(prevIndex);
+  const prev2ImgSrc = getSlideMainSourceByIndex(prev2Index);
+  const nextImgSrc = getSlideMainSourceByIndex(nextIndex);
+  const next2ImgSrc = getSlideMainSourceByIndex(next2Index);
+
+  const left1 = activeSlide.querySelector(".hero-preview-left-1");
+  const left2 = activeSlide.querySelector(".hero-preview-left-2");
+  const right1 = activeSlide.querySelector(".hero-preview-right-1");
+  const right2 = activeSlide.querySelector(".hero-preview-right-2");
+
+  if (left1 && prevImgSrc && left1.getAttribute("src") !== prevImgSrc) {
+    left1.src = prevImgSrc;
+  }
+  if (left2 && prev2ImgSrc && left2.getAttribute("src") !== prev2ImgSrc) {
+    left2.src = prev2ImgSrc;
+  }
+  if (right1 && nextImgSrc && right1.getAttribute("src") !== nextImgSrc) {
+    right1.src = nextImgSrc;
+  }
+  if (right2 && next2ImgSrc && right2.getAttribute("src") !== next2ImgSrc) {
+    right2.src = next2ImgSrc;
+  }
+
+  activeSlide.classList.add("is-active");
+
+  requestAnimationFrame(() => {
+    updateArrowPositions();
+  });
+}
+
+function prepareFirstSlideMobile() {
+  if (!slides.length) return;
+
+  currentOrderIndex = 0;
+
+  slides.forEach((slide) => {
+    slide.classList.remove("is-active");
+    slide.style.transition = "none";
+  });
+
+  const activeIndex = slideOrder[currentOrderIndex];
+  const activeSlide = slides[activeIndex];
+
+  if (activeSlide) {
+    activeSlide.classList.add("is-active");
+  }
+
+  const firstImg = activeSlide?.querySelector(".hero-main-image");
+  if (firstImg) {
+    ensureImageSource(firstImg);
+
+    try {
+      firstImg.loading = "eager";
+    } catch (e) {}
+    try {
+      firstImg.fetchPriority = "high";
+    } catch (e) {}
+    try {
+      firstImg.decoding = "async";
+    } catch (e) {}
+  }
+
+  updateSlidesMobile();
+
+  requestAnimationFrame(() => {
+    slides.forEach((slide) => {
+      slide.style.transition = "";
+    });
+  });
+}
 
 function showArrows() {
   if (window.innerWidth <= 900) return;
@@ -297,6 +516,39 @@ function waitForImageElement(img, timeoutMs = 10000) {
   });
 }
 
+function waitForImageElementMobile(img, timeoutMs = 10000) {
+  return new Promise((resolve) => {
+    let done = false;
+
+    ensureImageSource(img);
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
+
+    const timeoutId = setTimeout(finish, timeoutMs);
+
+    const wrappedFinish = () => {
+      clearTimeout(timeoutId);
+      finish();
+    };
+
+    if (img.complete && img.naturalWidth > 0) {
+      if (typeof img.decode === "function") {
+        img.decode().catch(() => {}).finally(wrappedFinish);
+      } else {
+        wrappedFinish();
+      }
+      return;
+    }
+
+    img.addEventListener("load", wrappedFinish, { once: true });
+    img.addEventListener("error", wrappedFinish, { once: true });
+  });
+}
+
 function ensureSlideReady(orderIndex, options = {}) {
   const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
 
@@ -334,6 +586,44 @@ function ensureSlideReady(orderIndex, options = {}) {
   return promise;
 }
 
+function ensureSlideReadyMobile(orderIndex, options = {}) {
+  const normalizedOrderIndex = getWrappedOrderIndex(orderIndex);
+  const cacheKey = `m-${normalizedOrderIndex}`;
+
+  if (slideReadinessCache.has(cacheKey)) {
+    return slideReadinessCache.get(cacheKey);
+  }
+
+  const promise = (async () => {
+    const images = getMobileSlideAssetElementsForOrder(normalizedOrderIndex);
+    if (!images.length) return;
+
+    const mainTimeout = options.mainTimeout ?? 10000;
+    const sideTimeout = options.sideTimeout ?? 7000;
+
+    await Promise.all(
+      images.map((img, index) => {
+        if (index === 0) {
+          try {
+            img.fetchPriority = "high";
+          } catch (e) {}
+        }
+
+        try {
+          img.decoding = "async";
+        } catch (e) {}
+
+        return waitForImageElementMobile(img, index === 0 ? mainTimeout : sideTimeout);
+      })
+    );
+
+    await new Promise((resolve) => doubleRAF(resolve));
+  })();
+
+  slideReadinessCache.set(cacheKey, promise);
+  return promise;
+}
+
 function primeAdjacentSlides() {
   if (!slides.length) return;
 
@@ -367,6 +657,27 @@ async function goToOrderIndex(targetOrderIndex) {
     currentOrderIndex = normalizedOrderIndex;
     updateSlides();
     showArrows();
+    return true;
+  } finally {
+    transitionLock = false;
+  }
+}
+
+async function goToOrderIndexMobile(targetOrderIndex) {
+  if (!slides.length || transitionLock) return;
+
+  transitionLock = true;
+
+  try {
+    const normalizedOrderIndex = getWrappedOrderIndex(targetOrderIndex);
+
+    await ensureSlideReadyMobile(normalizedOrderIndex, {
+      mainTimeout: 10000,
+      sideTimeout: 7000,
+    });
+
+    currentOrderIndex = normalizedOrderIndex;
+    updateSlidesMobile();
     return true;
   } finally {
     transitionLock = false;
@@ -481,6 +792,7 @@ function updateSlides() {
 
   primeAdjacentSlides();
 }
+
 function prepareFirstSlide() {
   if (!slides.length) return;
 
@@ -579,6 +891,14 @@ async function goToPrevSlide() {
   return await goToOrderIndex(currentOrderIndex - 1);
 }
 
+async function goToNextSlideMobile() {
+  return await goToOrderIndexMobile(currentOrderIndex + 1);
+}
+
+async function goToPrevSlideMobile() {
+  return await goToOrderIndexMobile(currentOrderIndex - 1);
+}
+
 function startSlideShow() {
   clearTimeout(slideInterval);
 
@@ -597,9 +917,32 @@ function startSlideShow() {
   scheduleNext();
 }
 
+function startSlideShowMobile() {
+  clearTimeout(slideInterval);
+
+  let isFirst = true;
+
+  function scheduleNext() {
+    const delay = isFirst ? 6500 : 3800;
+
+    slideInterval = setTimeout(async () => {
+      await goToNextSlideMobile();
+      isFirst = false;
+      scheduleNext();
+    }, delay);
+  }
+
+  scheduleNext();
+}
+
 function resetSlideShow() {
   if (!sliderReady) return;
   startSlideShow();
+}
+
+function resetSlideShowMobile() {
+  if (!sliderReady) return;
+  startSlideShowMobile();
 }
 
 /* =========================
@@ -644,6 +987,31 @@ async function handleSwipe(deltaX) {
 
     if (moved) {
       resetSlideShow();
+    }
+  } finally {
+    swipeLocked = false;
+  }
+}
+
+async function handleSwipeMobile(deltaX) {
+  if (!sliderReady || swipeLocked || transitionLock || Math.abs(deltaX) < 46) {
+    return;
+  }
+
+  swipeLocked = true;
+  clearTimeout(slideInterval);
+
+  try {
+    let moved = false;
+
+    if (deltaX < 0) {
+      moved = await goToNextSlideMobile();
+    } else {
+      moved = await goToPrevSlideMobile();
+    }
+
+    if (moved) {
+      resetSlideShowMobile();
     }
   } finally {
     swipeLocked = false;
@@ -707,9 +1075,86 @@ function setupMobileSwipe() {
       const deltaX = touchCurrentX - touchStartX;
       const deltaY = touchCurrentY - touchStartY;
 
-     if (isDraggingSlider && Math.abs(deltaX) > Math.abs(deltaY)) {
-  void handleSwipe(deltaX);
+      if (isDraggingSlider && Math.abs(deltaX) > Math.abs(deltaY)) {
+        void handleSwipe(deltaX);
+      }
+
+      isTouching = false;
+      isDraggingSlider = false;
+    },
+    { passive: true }
+  );
+
+  hero.addEventListener(
+    "touchcancel",
+    () => {
+      isTouching = false;
+      isDraggingSlider = false;
+    },
+    { passive: true }
+  );
 }
+
+function setupMobileSwipeLite() {
+  if (!hero) return;
+
+  hero.addEventListener(
+    "touchstart",
+    (e) => {
+      if (window.innerWidth > 900) return;
+      if (!e.touches || e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchCurrentX = touch.clientX;
+      touchCurrentY = touch.clientY;
+      isTouching = true;
+      isDraggingSlider = false;
+    },
+    { passive: true }
+  );
+
+  hero.addEventListener(
+    "touchmove",
+    (e) => {
+      if (window.innerWidth > 900) return;
+      if (!isTouching || !e.touches || e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      touchCurrentX = touch.clientX;
+      touchCurrentY = touch.clientY;
+
+      const deltaX = touchCurrentX - touchStartX;
+      const deltaY = touchCurrentY - touchStartY;
+
+      if (
+        !isDraggingSlider &&
+        Math.abs(deltaX) > 12 &&
+        Math.abs(deltaX) > Math.abs(deltaY)
+      ) {
+        isDraggingSlider = true;
+      }
+
+      if (isDraggingSlider) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+
+  hero.addEventListener(
+    "touchend",
+    () => {
+      if (window.innerWidth > 900) return;
+      if (!isTouching) return;
+
+      const deltaX = touchCurrentX - touchStartX;
+      const deltaY = touchCurrentY - touchStartY;
+
+      if (isDraggingSlider && Math.abs(deltaX) > Math.abs(deltaY)) {
+        void handleSwipeMobile(deltaX);
+      }
 
       isTouching = false;
       isDraggingSlider = false;
@@ -757,6 +1202,13 @@ window.addEventListener("resize", () => {
 
 async function waitForActiveSlideImage() {
   await ensureSlideReady(currentOrderIndex, {
+    mainTimeout: 10000,
+    sideTimeout: 7000,
+  });
+}
+
+async function waitForActiveSlideImageMobile() {
+  await ensureSlideReadyMobile(currentOrderIndex, {
     mainTimeout: 10000,
     sideTimeout: 7000,
   });
@@ -945,9 +1397,77 @@ async function bootHomeWhenReady() {
   }
 }
 
+async function bootMobileHomeWhenReady() {
+  try {
+    const firstViewReady = waitForActiveSlideImageMobile();
+    void waitForWindowLoad();
+
+    await firstViewReady;
+
+    const minLoaderMs = 1200;
+    const elapsed = loaderVisibleAt ? performance.now() - loaderVisibleAt : 0;
+    const remaining = Math.max(0, minLoaderMs - elapsed);
+
+    if (remaining > 0) {
+      await wait(remaining);
+    }
+
+    await startLoaderFadeOut();
+
+    if (loadingScreen) {
+      loadingScreen.classList.add("is-fading");
+      await wait(300);
+
+      if (loadingScreen.parentNode) {
+        loadingScreen.parentNode.removeChild(loadingScreen);
+      }
+    }
+
+    await showHeroSlider();
+
+    sliderReady = true;
+    startSlideShowMobile();
+    showSwipeHintBriefly();
+
+    requestAnimationFrame(() => {
+      updateArrowPositions();
+    });
+  } finally {
+    // no-op
+  }
+}
+
 /* =========================
    INIT
 ========================= */
+
+function initializeDesktopHome() {
+  document.body.classList.add("home-with-loader");
+
+  if (hero) {
+    hero.style.visibility = "hidden";
+  }
+
+  prepareFirstSlide();
+  setupMobileSwipe();
+  startRingLoader();
+  bootHomeWhenReady();
+}
+
+function initializeMobileHome() {
+  rewriteHeroDomForMobile();
+
+  document.body.classList.add("home-with-loader");
+
+  if (hero) {
+    hero.style.visibility = "hidden";
+  }
+
+  prepareFirstSlideMobile();
+  setupMobileSwipeLite();
+  startRingLoader();
+  bootMobileHomeWhenReady();
+}
 
 function initializePage() {
   if (pageInitialized) return;
@@ -956,16 +1476,11 @@ function initializePage() {
   const isHomeWithLoader = !!loadingScreen && !!hero && slides.length > 0;
 
   if (isHomeWithLoader) {
-    document.body.classList.add("home-with-loader");
-
-    if (hero) {
-      hero.style.visibility = "hidden";
+    if (isMobileViewport()) {
+      initializeMobileHome();
+    } else {
+      initializeDesktopHome();
     }
-
-    prepareFirstSlide();
-    setupMobileSwipe();
-    startRingLoader();
-    bootHomeWhenReady();
     return;
   }
 
